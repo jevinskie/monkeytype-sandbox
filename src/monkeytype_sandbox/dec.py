@@ -1,4 +1,38 @@
+from __future__ import annotations
+
+import typing
+from typing import Any
+from typing import Any as TEAny
+
 import typing_extensions
+
+if typing_extensions.Any is not typing.Any:
+    raise TypeError
+if TEAny is not Any:
+    raise TypeError
+
+
+class MQN(typing_extensions.Protocol):
+    m: str
+    qn: str
+
+
+class MQNR:
+    m: str
+    qn: str
+
+
+if typing_extensions.TYPE_CHECKING:
+    typing_extensions.reveal_type(MQN)
+    typing_extensions.reveal_type(MQNR)
+    # typing_extensions.reveal_type(MQN())
+    typing_extensions.reveal_type(MQNR())
+    if hasattr(MQN, "m"):
+        typing_extensions.reveal_type(MQN.m)
+    if hasattr(MQNR, "m"):
+        typing_extensions.reveal_type(MQNR.m)
+    if hasattr(MQNR(), "m"):
+        typing_extensions.reveal_type(MQNR().m)
 
 _F = typing_extensions.TypeVar("_F", bound=typing_extensions.Callable[..., typing_extensions.Any])
 
@@ -17,7 +51,7 @@ class register:
 
 
 class TypeRewriter:
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         print(f"TypeRewriter __init__ self: {self} args: {args} kwargs: {kwargs}")
 
 
