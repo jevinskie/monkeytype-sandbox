@@ -1,6 +1,6 @@
-import typing
+import typing_extensions
 
-_F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
+_F = typing_extensions.TypeVar("_F", bound=typing_extensions.Callable[..., typing_extensions.Any])
 
 
 class register:
@@ -24,22 +24,22 @@ class TypeRewriter:
 class BasicTypeRewriter(TypeRewriter):
     def rewrite(self) -> None:
         print(f"BasicTypeRewriter rewrite self: {self}")
-        self.rewrite_typing_union()
+        self.rewrite_typing_extensions_union()
         self.rewrite_pycp_union()
 
-    @register("typing", "Union")
-    def rewrite_typing_union(self) -> None:
-        print(f"rewrite_typing_union self: {self}")
-        print(f"rewrite_typing_union.m: {self.rewrite_typing_union.m}")
-        print(f"rewrite_typing_union.qn: {self.rewrite_typing_union.qn}")
+    @register("typing_extensions", "Union")
+    def rewrite_typing_extensions_union(self) -> None:
+        print(f"rewrite_typing_extensions_union self: {self}")
+        print(f"rewrite_typing_extensions_union.m: {self.rewrite_typing_extensions_union.m}")
+        print(f"rewrite_typing_extensions_union.qn: {self.rewrite_typing_extensions_union.qn}")
 
     @register("pycparser.c_ast", "Union")
     def rewrite_pycp_union(self) -> None:
         print(f"rewrite_pycp_union self: {self}")
-        print(f"rewrite_typing_union.m: {self.rewrite_pycp_union.m}")
-        print(f"rewrite_typing_union.qn: {self.rewrite_pycp_union.qn}")
-        if typing.TYPE_CHECKING:
-            typing.reveal_type(self.rewrite_pycp_union.qn)
+        print(f"rewrite_typing_extensions_union.m: {self.rewrite_pycp_union.m}")
+        print(f"rewrite_typing_extensions_union.qn: {self.rewrite_pycp_union.qn}")
+        if typing_extensions.TYPE_CHECKING:
+            typing_extensions.reveal_type(self.rewrite_pycp_union.qn)
 
 
 tr = TypeRewriter()
@@ -47,11 +47,11 @@ btr = BasicTypeRewriter()
 
 btr.rewrite()
 
-if typing.TYPE_CHECKING:
-    typing.reveal_type(register)
-    typing.reveal_type(register.__init__)
-    typing.reveal_type(register.__call__)
-    typing.reveal_type(TypeRewriter)
-    typing.reveal_type(BasicTypeRewriter)
-    typing.reveal_type(tr)
-    typing.reveal_type(btr)
+if typing_extensions.TYPE_CHECKING:
+    typing_extensions.reveal_type(register)
+    typing_extensions.reveal_type(register.__init__)
+    typing_extensions.reveal_type(register.__call__)
+    typing_extensions.reveal_type(TypeRewriter)
+    typing_extensions.reveal_type(BasicTypeRewriter)
+    typing_extensions.reveal_type(tr)
+    typing_extensions.reveal_type(btr)
