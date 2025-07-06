@@ -22,7 +22,7 @@ dynamic = ["version"]
 keywords = ["monkeytype"]
 name = "monkeytype-sandbox"
 readme = {file = 'README.md', content-type = 'text/markdown'}
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 
 [project.urls]
 repository = "https://github.com/jevinskie/monkeytype-sandbox"

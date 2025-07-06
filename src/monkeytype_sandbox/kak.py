@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import typing
 
@@ -60,7 +62,7 @@ printsum2(y=2, x=1)
 _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
 
 
-def cw2[F: typing.Callable[..., typing.Any]](_f: F) -> F:
+def cw2(_f: _F) -> _F:
     @functools.wraps(_f)
     def wrapper(*args, **kwargs):
         print(args, sorted(kwargs.items()))
