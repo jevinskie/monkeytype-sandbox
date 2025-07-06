@@ -19,7 +19,7 @@ def make_dict():
 class Union(ast.AST):
     def __init__(self):
         super().__init__()
-        print("Union(ast.Expr) __init__")
+        # print("Union(ast.Expr) __init__")
 
 
 def get_union_inner():
