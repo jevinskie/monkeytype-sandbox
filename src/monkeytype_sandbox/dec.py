@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import typing
-from typing import TYPE_CHECKING, Callable, cast
+from typing import TYPE_CHECKING, Callable
 
 import typing_extensions
 from typing_extensions import Any, ParamSpec, Protocol, TypeVar, reveal_type
@@ -12,7 +12,7 @@ if typing_extensions.Any is not typing.Any:
 if TEAny is not Any:
     raise TypeError
 
-
+_F = TypeVar("_F", bound=typing.Callable[..., typing.Any])
 _P = ParamSpec("_P")
 _R = TypeVar("_R", covariant=True)  # covariant so it can be used in return position
 
@@ -41,11 +41,12 @@ class register:
         self.m = mod
         self.qn = qualname
 
-    def __call__(self, func: Callable[_P, _R]) -> _CallableWithMetadata[_P, _R]:
+    def __call__(self, func: _F) -> _F:
         print(f"register __call__ self: {self} func: {func}")
         setattr(func, "m", self.m)
         setattr(func, "qn", self.qn)
-        return cast(_CallableWithMetadata[_P, _R], func)
+        # return cast(_CallableWithMetadata[_P, _R], func)
+        return func
 
 
 @register("foo", "bar")
@@ -66,7 +67,7 @@ if TYPE_CHECKING:
 
 class CoolClass:
     @register("foo", "bar")
-    def cool_meth(a: int, b: int) -> int:
+    def cool_meth(self, a: int, b: int) -> int:
         r = a + b
         print(f"a: {a} b: {b} a + b: {r} m: {cool.m} qn: {cool.qn}")
         return r
