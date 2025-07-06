@@ -2,7 +2,9 @@ import functools
 import typing
 
 import decorator
-from rich import print
+
+if not typing.TYPE_CHECKING:
+    from rich import print
 
 
 def chatty(func, *args, **kwargs):
@@ -11,9 +13,10 @@ def chatty(func, *args, **kwargs):
 
 
 @decorator.decorator(chatty)
-def printsum1(x=1, y=2):
+def printsum1(x: int = 1, y: int = 2) -> float:
     print("printsum1")
     print(x + y)
+    return float(x + y)
 
 
 printsum1(1, 2)
@@ -22,9 +25,10 @@ printsum1(y=2, x=1)
 
 
 @decorator.decorator(chatty, kwsyntax=True)
-def printsum3(x=1, y=2):
+def printsum3(x: int = 1, y: int = 2) -> float:
     print("printsum3")
     print(x + y)
+    return float(x + y)
 
 
 printsum3(1, 2)
@@ -43,14 +47,45 @@ def chattywrapper(func):
 
 
 @chattywrapper
-def printsum2(x=1, y=2):
+def printsum2(x: int = 1, y: int = 2) -> float:
     print("printsum2")
     print(x + y)
+    return float(x + y)
 
 
 printsum2(1, 2)
 printsum2(x=1, y=2)
 printsum2(y=2, x=1)
+
+_F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])
+
+
+def cw2[F: typing.Callable[..., typing.Any]](_f: F) -> F:
+    @functools.wraps(_f)
+    def wrapper(*args, **kwargs):
+        print(args, sorted(kwargs.items()))
+        return _f(*args, **kwargs)
+
+    # return functools.wraps(wrapper)
+    return wrapper
+
+
+@cw2
+def printsum4(x: int = 1, y: int = 2) -> float:
+    print("printsum4")
+    print(x + y)
+    return float(x + y)
+
+
+printsum4(1, 2)
+printsum4(x=1, y=2)
+printsum4(y=2, x=1)
+
+if typing.TYPE_CHECKING:
+    typing.reveal_type(printsum1)
+    typing.reveal_type(printsum2)
+    typing.reveal_type(printsum3)
+    typing.reveal_type(printsum4)
 
 
 def decc(cls, *args, **kwargs):
@@ -75,7 +110,7 @@ def _decf(
     return bool(*args, **kwargs)
 
 
-# decf = decorator.decorate(_decf)
+# decf = decorator.decorator(_decf)
 
 
 def decf(
