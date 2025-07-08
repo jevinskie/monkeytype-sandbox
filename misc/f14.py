@@ -48,9 +48,12 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         print("__func__")
         assert hasattr(self, "_f")
         if self._fg is None:
+            print("__func__ init _fg")
 
             def fg(*args: _P.args, **kwargs: _P.kwargs) -> _R_co:
                 return self._f(self._i, *args, **kwargs)
+
+            print(f"__func__ init _fg fg: {fg} id(fg): {id(fg)}")
 
             self._fg = fg
         return self._fg
@@ -61,7 +64,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         print(f"__get__ self: {self} i: {instance} o: {owner}")
         self._i = instance
         self._o = owner
-        return self.__func__
+        fr = self.__func__
+        print(fr)
+        return fr
 
     if sys.version_info >= (3, 10):
         __name__: str
@@ -78,22 +83,24 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         else:
             return False
 
-    if sys.version_info >= (3, 10):
-
-        @property
-        def __wrapped__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
-            print("__wrapped__")
-            return self._f
+    # if sys.version_info >= (3, 10):
+    @property
+    def wrapped(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
+        print("wrapped")
+        return self._f
 
 
 class Bar:
     @zlassmethod
     def bar(cls: type[Bar], a: int, b: int, /) -> int:
         print(f"Bar._bar cls: {cls} a: {a} b: {b}")
-        print(hasattr(Bar.bar, "__wrapped__"))
-        # print(getattr(Bar.bar, "__wrapped__"))
-        # print(id(getattr(Bar.bar, "__wrapped__")))
-        print(id(Bar.bar))
+        print(f"Bar._bar Bar.bar: {Bar.bar}")
+        print(hasattr(Bar.bar, "wrapped"))
+        # print(getattr(Bar.bar, "wrapped"))
+        # print(id(getattr(Bar.bar, "wrapped")))
+        print(f"id(Bar.bar): {id(Bar.bar):#010x}")
+        print(f"type(Bar.bar): {type(Bar.bar)}")
+        print(f"foo3: {object.__getattribute__(cls, 'bar')}")
         return a + b
 
 
