@@ -20,8 +20,11 @@ _P = ParamSpec("_P")
 _T = TypeVar("_T")
 _R_co = TypeVar("_R_co", covariant=True)
 
-if sys.version_info >= (3, 14):
-    from _typeshed import AnnotateFunc
+if TYPE_CHECKING:
+    if sys.version_info >= (3, 14):
+        from _typeshed import AnnotateFunc
+    else:
+        AnnotateFunc = Any
 
 
 class zlassmethod(Generic[_T, _P, _R_co]):
@@ -41,7 +44,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
 
     @overload
     def __get__(self, instance: None, owner: type[_T], /) -> Callable[_P, _R_co]:
-        return None
+        return NotImplementedError
 
     @property
     def __func__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
