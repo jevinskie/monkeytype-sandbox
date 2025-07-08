@@ -26,9 +26,10 @@ def _bar(cls: type, a: int, b: int) -> int:
     return a + b
 
 
-bar: classmethod[Foo, [int, int], int] = classmethod(_bar)
-bfr = functools.partial(bar.__func__, Foo)
-bf = typing.cast(Callable[[int, int], int], functools.partial(bar.__func__, Foo))
+bar_raw: classmethod[Foo, [int, int], int] = classmethod(_bar)
+bar = typing.cast(classmethod[Foo, [int, int], int], bar_raw)
+bf_raw = functools.partial(bar.__func__, Foo)
+bf = typing.cast(Callable[[int, int], int], bf_raw)
 print(bar.__wrapped__)
 print(bar.__func__(Foo, 1000, 2000))
 print(bf(10_000, 20_000))
@@ -41,6 +42,7 @@ print(f.static_meth(100, 200))
 print(type(f).static_meth(400, 500))
 
 if typing.TYPE_CHECKING:
+    typing.reveal_type(bar_raw)
     typing.reveal_type(bar)
-    typing.reveal_type(bfr)
+    typing.reveal_type(bf_raw)
     typing.reveal_type(bf)
