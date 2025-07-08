@@ -26,12 +26,14 @@ if TYPE_CHECKING:
 
 class zlassmethod(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[type[_T], _P], _R_co]
+    _fg: Callable[_P, _R_co] | None
     _i: _T
     _o: type[_T] | None
 
     def __init__(self, f: Callable[Concatenate[type[_T], _P], _R_co], /) -> None:
         print(f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__}")
         self._f = f
+        self._fg = None
         if sys.version_info >= (3, 10):
             self.__name__ = f.__name__
             self.__qualname__ = f.__qualname__
@@ -41,13 +43,25 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         def __class_getitem__(cls, item: Any, /) -> GenericAlias:
             raise NotImplementedError
 
+    @property
+    def __func__(self) -> Callable[_P, _R_co]:
+        print("__func__")
+        assert hasattr(self, "_f")
+        if self._fg is None:
+
+            def fg(*args: _P.args, **kwargs: _P.kwargs) -> _R_co:
+                return self._f(self._i, *args, **kwargs)
+
+            self._fg = fg
+        return self._fg
+
     def __get__(
         self, instance: _T, owner: type[_T] | None = None, /
     ) -> Callable[Concatenate[type[_T], _P], _R_co]:
         print(f"__get__ self: {self} i: {instance} o: {owner}")
         self._i = instance
         self._o = owner
-        return self._f
+        return self.__func__
 
     if sys.version_info >= (3, 10):
         __name__: str
@@ -55,12 +69,6 @@ class zlassmethod(Generic[_T, _P, _R_co]):
 
     if sys.version_info >= (3, 14):
         __annotate__: AnnotateFunc | None
-
-    @property
-    def __func__(self) -> Callable[_P, _R_co]:
-        print("__func__")
-        assert hasattr(self, "_f")
-        return self._f
 
     @property
     def __isabstractmethod__(self) -> bool:
@@ -83,8 +91,8 @@ class Bar:
     def bar(cls: type[Bar], a: int, b: int, /) -> int:
         print(f"Bar._bar cls: {cls} a: {a} b: {b}")
         print(hasattr(Bar.bar, "__wrapped__"))
-        print(getattr(Bar.bar, "__wrapped__"))
-        print(id(getattr(Bar.bar, "__wrapped__")))
+        # print(getattr(Bar.bar, "__wrapped__"))
+        # print(id(getattr(Bar.bar, "__wrapped__")))
         print(id(Bar.bar))
         return a + b
 
@@ -94,7 +102,7 @@ b3 = Bar()
 print(b3)
 print(b3.bar)
 # print(b3.bar(Bar, 1, 2))
-print(b3.bar(1, 2, 3))
+print(b3.bar(1, 2))
 
 if TYPE_CHECKING:
     reveal_type(b3)
