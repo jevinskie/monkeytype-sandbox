@@ -22,13 +22,14 @@ class Foo:
         return a + b
 
 
-def _bar(a: int, b: int) -> int:
+def _bar(cls: type, a: int, b: int) -> int:
+    print(f"_bar cls: {cls} a: {a} b: {b}")
     return a + b
 
 
 bar = classmethod(_bar)
 print(bar.__wrapped__)
-print(bar.__func__(1000, 2000))
+print(bar.__func__({"hai": "2u"}, 1000, 2000))
 
 f = Foo()
 print(f)
