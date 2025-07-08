@@ -85,39 +85,50 @@ class glassmethod2(Generic[_T, _P, _R_co]):
 
 
 class zlassmethod(Generic[_T, _P, _R_co]):
-    def __init__(self, f: Callable[Concatenate[type[_T], _P], _R_co], /) -> None:
-        raise NotImplementedError
+    _f: Callable[_P, _R_co]
+    _i: _T
+    _o: type[_T] | None
+
+    def __init__(self, f: Callable[_P, _R_co], /) -> None:
+        self._f = f
+        if sys.version_info >= (3, 10):
+            self.__name__ = f.__name__
+            self.__qualname__ = f.__qualname__
 
     if sys.version_info >= (3, 14):
 
         def __class_getitem__(cls, item: Any, /) -> GenericAlias:
             raise NotImplementedError
 
-        __annotate__: AnnotateFunc | None
-
-    @overload
     def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
-        raise NotImplementedError
-
-    @overload
-    def __get__(self, instance: None, owner: type[_T], /) -> Callable[_P, _R_co]:
-        return NotImplementedError
-
-    @property
-    def __func__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
-        raise NotImplementedError
-
-    @property
-    def __isabstractmethod__(self) -> bool:
-        raise NotImplementedError
+        self._i = instance
+        self._o = owner
+        return self._f
 
     if sys.version_info >= (3, 10):
         __name__: str
         __qualname__: str
 
+    if sys.version_info >= (3, 14):
+        __annotate__: AnnotateFunc | None
+
+    @property
+    def __func__(self) -> Callable[_P, _R_co]:
+        assert hasattr(self, "_f")
+        return self._f
+
+    @property
+    def __isabstractmethod__(self) -> bool:
+        if hasattr(self._f, "__isabstractmethod__"):
+            return self._f.__isabstractmethod__()
+        else:
+            return False
+
+    if sys.version_info >= (3, 10):
+
         @property
-        def __wrapped__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
-            raise NotImplementedError
+        def __wrapped__(self) -> Callable[_P, _R_co]:
+            return self._f
 
 
 class Foo:
