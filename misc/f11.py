@@ -1,6 +1,4 @@
-import functools
 import typing
-from collections.abc import Callable
 
 P = typing.ParamSpec("P")
 
@@ -26,13 +24,13 @@ def _bar(cls: type, a: int, b: int) -> int:
     return a + b
 
 
-bar_raw: classmethod[Foo, [int, int], int] = classmethod(_bar)
-bar = typing.cast(classmethod[Foo, [int, int], int], bar_raw)
-bf_raw = functools.partial(bar.__func__, Foo)
-bf = typing.cast(Callable[[int, int], int], bf_raw)
+bar_raw: staticmethod[[type, int, int], int] = staticmethod(_bar)
+bar = typing.cast(staticmethod[[int, int], int], bar_raw)
+# bf_raw = functools.partial(bar.__func__, Foo)
+# bf = typing.cast(Callable[[int, int], int], bf_raw)
 print(bar.__wrapped__)
-print(bar.__func__(Foo, 1000, 2000))
-print(bf(10_000, 20_000))
+# print(bar.__func__(Foo, 1000, 2000))
+print(bar_raw(Foo, 10_000, 20_000))
 
 f = Foo()
 print(f)
@@ -44,5 +42,7 @@ print(type(f).static_meth(400, 500))
 if typing.TYPE_CHECKING:
     typing.reveal_type(bar_raw)
     typing.reveal_type(bar)
-    typing.reveal_type(bf_raw)
-    typing.reveal_type(bf)
+    typing.reveal_type(bar.__wrapped__)
+    typing.reveal_type(bar.__func__)
+    # typing.reveal_type(bf_raw)
+    # typing.reveal_type(bf)
