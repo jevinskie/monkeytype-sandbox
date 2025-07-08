@@ -155,11 +155,11 @@ def _bar(cls: type[Foo], a: int, b: int, /) -> int:
 
 
 bar_raw: classmethod[Foo, [int, int], int] = classmethod(_bar)
-bar = cast("classmethod[Foo, [int, int], int]", bar_raw)
+bar_ = cast("classmethod[Foo, [int, int], int]", bar_raw)
 bf_raw = functools.partial(bar_raw.__func__, Foo)
 bf = cast(Callable[[int, int], int], bf_raw)
-print(bar.__wrapped__)
-# print(bar.__func__(Foo, 1000, 2000))
+print(bar_.__wrapped__)
+# print(bar_.__func__(Foo, 1000, 2000))
 print(bf_raw(10_000, 20_000))
 print(bf(10_000, 20_000))
 
@@ -172,9 +172,9 @@ print(type(f).static_meth(400, 500))
 
 if TYPE_CHECKING:
     reveal_type(bar_raw)
-    reveal_type(bar)
-    reveal_type(bar.__wrapped__)
-    reveal_type(bar.__func__)
+    reveal_type(bar_)
+    reveal_type(bar_.__wrapped__)
+    reveal_type(bar_.__func__)
     reveal_type(bf_raw)
     reveal_type(bf)
 
@@ -192,6 +192,10 @@ class Bar:
     @zlassmethod
     def bar(cls: type[Bar], a: int, b: int, /) -> int:
         print(f"Bar._bar cls: {cls} a: {a} b: {b}")
+        print(hasattr(Bar.bar, "__wrapped__"))
+        # print(Bar.bar.__wrapped__)
+        # print(id(Bar.bar.__wrapped__))
+        # print(id(bar))
         return a + b
 
 
