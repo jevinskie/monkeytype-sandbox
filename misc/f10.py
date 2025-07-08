@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, reveal_type
 
 from rich import inspect as rinspect
@@ -21,6 +22,14 @@ class Foo:
         return a + b
 
 
+def _bar(a: int, b: int) -> int:
+    return a + b
+
+
+bar = classmethod(_bar)
+print(bar.__wrapped__)
+print(bar.__func__(1000, 2000))
+
 f = Foo()
 print(f)
 print(f.regular_meth(1, 2))
@@ -29,6 +38,14 @@ print(f.static_meth(100, 200))
 print(type(f).static_meth(400, 500))
 # print(f.class_meth.__wrapped__)
 # print(f.static_meth.__wrapped__)
+print(Foo.class_meth)
+print(inspect.ismethod(Foo.class_meth))
+print(inspect.ismemberdescriptor(Foo.class_meth))
+print(inspect.ismethoddescriptor(Foo.class_meth))
+print(inspect.ismethodwrapper(Foo.class_meth))
+print(Foo.class_meth.__name__)
+print(Foo.class_meth.__annotations__)
+# print(Foo.class_meth.__wrapped__)
 rinspect(Foo.class_meth, all=True)
 rinspect(f.class_meth, all=True)
 print(dir(Foo.class_meth))
