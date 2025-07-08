@@ -1,8 +1,63 @@
-import functools
-from collections.abc import Callable
-from typing import TYPE_CHECKING, ParamSpec, cast, reveal_type
+from __future__ import annotations
 
-P = ParamSpec("P")
+import functools
+import sys
+from collections.abc import Callable
+from types import GenericAlias
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Generic,
+    ParamSpec,
+    TypeVar,
+    cast,
+    overload,
+    reveal_type,
+)
+
+_P = ParamSpec("_P")
+_T = TypeVar("_T")
+_R_co = TypeVar("_R_co", covariant=True)
+
+if sys.version_info >= (3, 14):
+    from _typeshed import AnnotateFunc
+
+
+class zlassmethod(Generic[_T, _P, _R_co]):
+    def __init__(self, f: Callable[Concatenate[type[_T], _P], _R_co], /) -> None:
+        raise NotImplementedError
+
+    if sys.version_info >= (3, 14):
+
+        def __class_getitem__(cls, item: Any, /) -> GenericAlias:
+            raise NotImplementedError
+
+        __annotate__: AnnotateFunc | None
+
+    @overload
+    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
+        raise NotImplementedError
+
+    @overload
+    def __get__(self, instance: None, owner: type[_T], /) -> Callable[_P, _R_co]:
+        return None
+
+    @property
+    def __func__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
+        raise NotImplementedError
+
+    @property
+    def __isabstractmethod__(self) -> bool:
+        raise NotImplementedError
+
+    if sys.version_info >= (3, 10):
+        __name__: str
+        __qualname__: str
+
+        @property
+        def __wrapped__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
+            raise NotImplementedError
 
 
 class Foo:
@@ -33,6 +88,7 @@ bf = cast(Callable[[int, int], int], bf_raw)
 print(bar.__wrapped__)
 # print(bar.__func__(Foo, 1000, 2000))
 print(bf_raw(10_000, 20_000))
+print(bf(10_000, 20_000))
 
 f = Foo()
 print(f)
