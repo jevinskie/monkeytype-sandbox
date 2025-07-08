@@ -100,7 +100,7 @@ class Bar:
         # print(id(getattr(Bar.bar, "wrapped")))
         print(f"id(Bar.bar): {id(Bar.bar):#010x}")
         print(f"type(Bar.bar): {type(Bar.bar)}")
-        print(f"foo3: {object.__getattribute__(cls, 'bar')}")
+        print(f"foo3: {vars(Bar)['bar'].wrapped}")
         return a + b
 
 
