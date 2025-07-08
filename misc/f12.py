@@ -85,11 +85,11 @@ class glassmethod2(Generic[_T, _P, _R_co]):
 
 
 class zlassmethod(Generic[_T, _P, _R_co]):
-    _f: Callable[_P, _R_co]
+    _f: Callable[Concatenate[type[_T], _P], _R_co]
     _i: _T
     _o: type[_T] | None
 
-    def __init__(self, f: Callable[_P, _R_co], /) -> None:
+    def __init__(self, f: Callable[Concatenate[type[_T], _P], _R_co], /) -> None:
         self._f = f
         if sys.version_info >= (3, 10):
             self.__name__ = f.__name__
@@ -100,7 +100,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         def __class_getitem__(cls, item: Any, /) -> GenericAlias:
             raise NotImplementedError
 
-    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
+    def __get__(
+        self, instance: _T, owner: type[_T] | None = None, /
+    ) -> Callable[Concatenate[type[_T], _P], _R_co]:
         self._i = instance
         self._o = owner
         return self._f
@@ -120,14 +122,14 @@ class zlassmethod(Generic[_T, _P, _R_co]):
     @property
     def __isabstractmethod__(self) -> bool:
         if hasattr(self._f, "__isabstractmethod__"):
-            return self._f.__isabstractmethod__()
+            return bool(self._f.__isabstractmethod__())
         else:
             return False
 
     if sys.version_info >= (3, 10):
 
         @property
-        def __wrapped__(self) -> Callable[_P, _R_co]:
+        def __wrapped__(self) -> Callable[Concatenate[type[_T], _P], _R_co]:
             return self._f
 
 
@@ -176,9 +178,30 @@ if TYPE_CHECKING:
     reveal_type(bf_raw)
     reveal_type(bf)
 
-gm2 = glassmethod2(_bar)
+gm2: zlassmethod[Foo, [int, int], int] = zlassmethod(_bar)
 
 print(gm2)
+# print(gm2(1, 2))
 
 if TYPE_CHECKING:
     reveal_type(gm2)
+    reveal_type(gm2(1, 2))
+
+
+class Bar:
+    @zlassmethod
+    def bar(cls: type[Bar], a: int, b: int, /) -> int:
+        print(f"Bar._bar cls: {cls} a: {a} b: {b}")
+        return a + b
+
+
+b3 = Bar()
+
+print(b3)
+print(b3.bar)
+print(b3.bar(Bar, 1, 2))
+
+if TYPE_CHECKING:
+    reveal_type(b3)
+    reveal_type(b3.bar)
+    reveal_type(b3.bar(1, 2))
