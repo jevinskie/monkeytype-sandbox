@@ -55,7 +55,7 @@ class glassmethod(Generic[_T, _P, _R_co]):
 
 class glassmethod2(Generic[_T, _P, _R_co]):
     def __init__(self, f: Callable[Concatenate[type[_T], _P], _R_co], /) -> None:
-        raise RuntimeError
+        pass
 
     if sys.version_info >= (3, 14):
 
@@ -164,3 +164,10 @@ if TYPE_CHECKING:
     reveal_type(bar.__func__)
     reveal_type(bf_raw)
     reveal_type(bf)
+
+gm2 = glassmethod2(_bar)
+
+print(gm2)
+
+if TYPE_CHECKING:
+    reveal_type(gm2)
