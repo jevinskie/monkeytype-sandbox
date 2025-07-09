@@ -51,9 +51,17 @@ class Mathod(Generic[_T, _P, _R_co]):
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
-            fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
+            # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
+            fr2 = self._f
+            if TYPE_CHECKING:
+                reveal_type(fr2)
             return fr2
+        # fr: Callable[_P, _R_co] = self._f.__get__(obj, cls)
+        # fr = self._f.__get__(obj, cls)
+        reveal_type(self._f)
         fr: Callable[_P, _R_co] = self._f.__get__(obj, cls)
+        if TYPE_CHECKING:
+            reveal_type(fr)
         return fr
 
     def __set_name__(self, owner: Any, name: Any) -> None:
