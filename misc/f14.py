@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from types import GenericAlias
 from typing import (
     TYPE_CHECKING,
     Any,
     Concatenate,
     Generic,
     ParamSpec,
-    Self,
     TypeVar,
     overload,
     reveal_type,
@@ -48,7 +46,9 @@ class Mathod(Generic[_T, _P, _R_co]):
     def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
     @overload
     def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
-    def __get__(self, obj: _T | None, cls: type[_T] | None = None, /):
+    def __get__(
+        self, obj: _T | None, cls: type[_T] | None = None, /
+    ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
             fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
@@ -58,21 +58,6 @@ class Mathod(Generic[_T, _P, _R_co]):
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
-
-
-class cached_property(Generic[_T_co]):
-    func: Callable[[Any], _T_co]
-    attrname: str | None
-
-    def __init__(self, func: Callable[[Any], _T_co]) -> None: ...
-    def __class_getitem__(cls, item: Any, /) -> GenericAlias: ...
-    @overload
-    def __get__(self, instance: None, owner: type[Any] | None = None) -> Self: ...
-    @overload
-    def __get__(self, instance: object, owner: type[Any] | None = None) -> _T_co: ...
-    # __set__ is not defined at runtime, but @cached_property is designed to be settable
-    def __set__(self, instance: object, value: _T_co) -> None: ...  # type: ignore[misc]  # pyright: ignore[reportGeneralTypeIssues]
-    def __set_name__(self, owner: type[Any], name: str) -> None: ...
 
 
 class Bar:
