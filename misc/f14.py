@@ -44,14 +44,17 @@ class Mathod(Generic[_T, _P, _R_co]):
         print(f"Mathod.__init__ func: {func}")
         self._f = func
 
+    @overload
     def __get__(
-        self, obj: _T | None, cls: type[_T] | None = None, /
-    ) -> Callable[Concatenate[type[_T], _P], _R_co]:
+        self, instance: None, owner: type, /
+    ) -> Callable[Concatenate[type[_T], _P], _R_co]: ...
+    @overload
+    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
+    def __get__(self, obj: _T | None, cls: type[_T] | None = None, /):
         print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
             return self._f
-        f: Callable[Concatenate[type[_T], _P], _R_co] = self._f.__get__(obj)
-        return f
+        return self._f.__get__(obj, cls)
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
