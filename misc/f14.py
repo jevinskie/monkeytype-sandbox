@@ -16,7 +16,12 @@ from typing import (
 if not TYPE_CHECKING:
     from rich import print
 
-from rich import inspect as rinspect
+if not TYPE_CHECKING:
+    from rich import inspect as rinspect
+else:
+
+    def rinspect(*args: Any, **kwargs: Any) -> None: ...
+
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
