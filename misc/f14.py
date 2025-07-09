@@ -4,7 +4,7 @@ import functools
 import sys
 from collections.abc import Callable
 from types import GenericAlias
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, TypeVar, reveal_type
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, ParamSpec, TypeVar, reveal_type
 
 if not TYPE_CHECKING:
     from rich import print
@@ -99,18 +99,21 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         return f"<zlassmethod _i: {self._i} _f: {self._f} o: {self._o} at {id(self):#010x}>"
 
 
-class Mathod:
-    _f: Callable
+class Mathod(Generic[_T, _P, _R_co]):
+    _f: Callable[Concatenate[type[_T], _P], _R_co]
 
-    def __init__(self, func: Callable) -> None:
+    def __init__(self, func: Callable[Concatenate[type[_T], _P], _R_co]) -> None:
         print(f"Mathod.__init__ func: {func}")
         self._f = func
 
-    def __get__(self, obj: _T | None, cls: type[_T] | None = None, /) -> Callable:
+    def __get__(
+        self, obj: _T | None, cls: type[_T] | None = None, /
+    ) -> Callable[Concatenate[type[_T], _P], _R_co]:
         print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
             return self._f
-        return self._f.__get__(obj)
+        f: Callable[Concatenate[type[_T], _P], _R_co] = self._f.__get__(obj)
+        return f
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
