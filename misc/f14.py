@@ -3,15 +3,8 @@ from __future__ import annotations
 import functools
 import sys
 from collections.abc import Callable
-from types import GenericAlias, MethodType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    ParamSpec,
-    TypeVar,
-    reveal_type,
-)
+from types import GenericAlias
+from typing import TYPE_CHECKING, Any, Generic, ParamSpec, TypeVar, reveal_type
 
 if not TYPE_CHECKING:
     from rich import print
@@ -113,9 +106,11 @@ class Mathod:
         print(f"Mathod.__init__ func: {func}")
         self._f = func
 
-    def __get__(self, obj: _T | None, objtype: type[_T] | None = None, /) -> Callable:
-        print(f"__get__ self: {self} i: {obj} o: {objtype}")
-        return functools.partial(self._f, obj)
+    def __get__(self, obj: _T | None, cls: type[_T] | None = None, /) -> Callable:
+        print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
+        if obj is None:
+            return self._f
+        return self._f.__get__(obj)
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
@@ -149,9 +144,8 @@ class Bar:
         print(f"mathod self: {self} a: {a} b: {b}")
         return a + b
 
-    @MethodType
     def method(self, a: int, b: int) -> int:
-        print(f"mathod self: {self} a: {a} b: {b}")
+        print(f"method self: {self} a: {a} b: {b}")
         return a + b
 
 
@@ -160,25 +154,38 @@ b3 = Bar(7)
 # print(b3)
 # print(b3.bar)
 # print(b3.bar(Bar, 1, 2))
-print(b3.plain)
-print(b3.bar(1, 2))
+# print(b3.plain)
+# print(b3.bar(1, 2))
+print(Bar.method)
+print(Bar.mathod)
 print(b3.mathod)
 print(b3.mathod(1, 2))
+print(Bar.mathod(b3, 1, 2))
 print(b3.method)
 print(b3.method(1, 2))
+print(Bar.method(b3, 1, 2))
+print(getattr(Bar, "method"))
+print(getattr(b3, "method"))
+print(getattr(Bar, "mathod"))
+print(getattr(b3, "mathod"))
 
-
-rinspect(Bar.mathod, all=True)
-rinspect(b3.mathod, all=True)
-rinspect(Bar.method, all=True)
-rinspect(b3.method, all=True)
+# rinspect(Bar.mathod, all=True)
+# rinspect(b3.mathod, all=True)
+# rinspect(Bar.method, all=True)
+# rinspect(b3.method, all=True)
 
 if TYPE_CHECKING:
     reveal_type(b3)
     reveal_type(b3.plain)
-    reveal_type(type(b3).plain)
+    reveal_type(Bar.plain)
     reveal_type(Bar.mathod)
+    reveal_type(Bar.method)
     reveal_type(b3.mathod)
-    reveal_type(b3.plain(1, 2))
-    reveal_type(b3.bar)
-    reveal_type(b3.bar(1, 2))
+    reveal_type(b3.mathod)
+    reveal_type(getattr(Bar, "method"))
+    reveal_type(getattr(b3, "method"))
+    reveal_type(getattr(Bar, "mathod"))
+    reveal_type(getattr(b3, "mathod"))
+    # reveal_type(b3.plain(1, 2))
+    # reveal_type(b3.bar)
+    # reveal_type(b3.bar(1, 2))
