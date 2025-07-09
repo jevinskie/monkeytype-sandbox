@@ -13,6 +13,8 @@ from typing import (
     reveal_type,
 )
 
+from rich import print
+
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
 _R_co = TypeVar("_R_co", covariant=True)
@@ -26,13 +28,11 @@ if TYPE_CHECKING:
 
 class zlassmethod(Generic[_T, _P, _R_co]):
     _f: Callable[_P, _R_co]
-    _fg: Callable[_P, _R_co] | None
     _i: _T | None = None
     _o: type[_T] | None
 
     def __init__(self, f: Callable[_P, _R_co], /) -> None:
         self._f = f
-        self._fg = None
         self._i = None
         self._o = None
         print(f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__}")
@@ -49,19 +49,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
     def __func__(self) -> Callable[_P, _R_co]:
         print("__func__")
         assert hasattr(self, "_f")
-        if self._fg is None:
-            print("__func__ init _fg")
-            assert self._i is not None
-
-            def fg(*args: _P.args, **kwargs: _P.kwargs) -> _R_co:
-                print(f"fg() self: {self} args: {args} kw: {kwargs}")
-                assert self._i is not None
-                return self._f(self._i, *args, **kwargs)
-
-            print(f"__func__ init _fg fg: {fg} id(fg): {id(fg):#010x}")
-
-            self._fg = fg
-        return self._fg
+        return self._f
 
     def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
         print(f"__get__ self: {self} i: {instance} o: {owner}")
@@ -70,6 +58,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         fr = self.__func__
         print(f"__get__ fr: {fr}")
         return fr
+
+    def __set_name__(self, owner: Any, name: Any) -> None:
+        print(f"__set_name__ self: {self} owner: {owner} name: {name}")
 
     if sys.version_info >= (3, 10):
         __name__: str
@@ -121,7 +112,7 @@ b3 = Bar(2)
 print(b3)
 print(b3.bar)
 # print(b3.bar(Bar, 1, 2))
-print(b3.bar(1, 2))
+print(b3.bar(b3, 1, 2))
 
 if TYPE_CHECKING:
     reveal_type(b3)
