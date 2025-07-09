@@ -28,13 +28,15 @@ if TYPE_CHECKING:
 class zlassmethod(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[_T, _P], _R_co]
     _fg: Callable[Concatenate[_T, _P], _R_co] | None
-    _i: _T
+    _i: _T | None = None
     _o: type[_T] | None
 
     def __init__(self, f: Callable[Concatenate[_T, _P], _R_co], /) -> None:
-        print(f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__}")
         self._f = f
         self._fg = None
+        self._i = None
+        self._o = None
+        print(f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__}")
         if sys.version_info >= (3, 10):
             self.__name__ = f.__name__
             self.__qualname__ = f.__qualname__
@@ -50,9 +52,11 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         assert hasattr(self, "_f")
         if self._fg is None:
             print("__func__ init _fg")
+            assert self._i is not None
 
             def fg(salf: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R_co:
                 print(f"fg() salf: {salf} args: {args} kw: {kwargs}")
+                assert self._i is not None
                 return self._f(self._i, *args, **kwargs)
 
             print(f"__func__ init _fg fg: {fg} id(fg): {id(fg):#010x}")
@@ -90,6 +94,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
     def wrapped(self) -> Callable[Concatenate[_T, _P], _R_co]:
         print("wrapped")
         return self._f
+
+    def __repr__(self) -> str:
+        return f"<zlassmethod _i: {self._i} _f: {self._f} o: {self._o} at {id(self):#010x}>"
 
 
 class Bar:
