@@ -46,7 +46,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         print(
             f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__} args: {args} kw: {kwargs}"
         )
-        rinspect(f, all=True)
+        # rinspect(f, all=True)
         if sys.version_info >= (3, 10):
             self.__name__ = f.__name__
             self.__qualname__ = f.__qualname__
@@ -106,6 +106,21 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         return f"<zlassmethod _i: {self._i} _f: {self._f} o: {self._o} at {id(self):#010x}>"
 
 
+class Mathod:
+    _f: Callable
+
+    def __init__(self, func: Callable) -> None:
+        print(f"Mathod.__init__ func: {func}")
+        self._f = func
+
+    def __get__(self, obj: _T | None, objtype: type[_T] | None = None, /) -> Callable:
+        print(f"__get__ self: {self} i: {obj} o: {objtype}")
+        return functools.partial(self._f, obj)
+
+    def __set_name__(self, owner: Any, name: Any) -> None:
+        print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
+
+
 class Bar:
     _n: int
 
@@ -129,6 +144,11 @@ class Bar:
         print(f"plain self: {self} a: {a} b: {b}")
         return a + b
 
+    @Mathod
+    def mathod(self, a: int, b: int) -> int:
+        print(f"plain self: {self} a: {a} b: {b}")
+        return a + b
+
 
 b3 = Bar(7)
 
@@ -137,15 +157,20 @@ b3 = Bar(7)
 # print(b3.bar(Bar, 1, 2))
 print(b3.plain)
 print(b3.bar(1, 2))
+print(b3.mathod)
+print(b3.mathod(1, 2))
 
-rinspect(Bar.plain, all=True)
-rinspect(b3.plain, all=True)
+
+rinspect(Bar.mathod, all=True)
+rinspect(b3.mathod, all=True)
 
 
 if TYPE_CHECKING:
     reveal_type(b3)
     reveal_type(b3.plain)
     reveal_type(type(b3).plain)
+    reveal_type(Bar.mathod)
+    reveal_type(b3.mathod)
     reveal_type(b3.plain(1, 2))
     reveal_type(b3.bar)
     reveal_type(b3.bar(1, 2))
