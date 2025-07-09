@@ -6,7 +6,6 @@ from types import GenericAlias
 from typing import (
     TYPE_CHECKING,
     Any,
-    Concatenate,
     Generic,
     ParamSpec,
     Self,
@@ -26,12 +25,12 @@ if TYPE_CHECKING:
 
 
 class zlassmethod(Generic[_T, _P, _R_co]):
-    _f: Callable[Concatenate[_T, _P], _R_co]
-    _fg: Callable[Concatenate[_T, _P], _R_co] | None
+    _f: Callable[_P, _R_co]
+    _fg: Callable[_P, _R_co] | None
     _i: _T | None = None
     _o: type[_T] | None
 
-    def __init__(self, f: Callable[Concatenate[_T, _P], _R_co], /) -> None:
+    def __init__(self, f: Callable[_P, _R_co], /) -> None:
         self._f = f
         self._fg = None
         self._i = None
@@ -47,7 +46,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
             raise NotImplementedError
 
     @property
-    def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
+    def __func__(self) -> Callable[_P, _R_co]:
         print("__func__")
         assert hasattr(self, "_f")
         if self._fg is None:
@@ -64,9 +63,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
             self._fg = fg
         return self._fg
 
-    def __get__(
-        self, instance: _T, owner: type[_T] | None = None, /
-    ) -> Callable[Concatenate[_T, _P], _R_co]:
+    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
         print(f"__get__ self: {self} i: {instance} o: {owner}")
         self._i = instance
         self._o = owner
@@ -91,7 +88,7 @@ class zlassmethod(Generic[_T, _P, _R_co]):
 
     # if sys.version_info >= (3, 10):
     @property
-    def wrapped(self) -> Callable[Concatenate[_T, _P], _R_co]:
+    def wrapped(self) -> Callable[_P, _R_co]:
         print("wrapped")
         return self._f
 
