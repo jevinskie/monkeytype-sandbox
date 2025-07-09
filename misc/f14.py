@@ -9,13 +9,14 @@ from typing import (
     Any,
     Generic,
     ParamSpec,
-    Self,
     TypeVar,
     reveal_type,
 )
 
 if not TYPE_CHECKING:
     from rich import print
+
+from rich import inspect as rinspect
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
@@ -33,11 +34,14 @@ class zlassmethod(Generic[_T, _P, _R_co]):
     _i: _T | None = None
     _o: type[_T] | None
 
-    def __init__(self, f: Callable[_P, _R_co], /) -> None:
+    def __init__(self, f: Callable[_P, _R_co], *args: Any, **kwargs: Any) -> None:
         self._f = f
         self._i = None
         self._o = None
-        print(f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__}")
+        print(
+            f"__init__ self: {self} f: {f} f.name: {f.__name__} f.qn: {f.__qualname__} args: {args} kw: {kwargs}"
+        )
+        rinspect(f, all=True)
         if sys.version_info >= (3, 10):
             self.__name__ = f.__name__
             self.__qualname__ = f.__qualname__
@@ -53,16 +57,19 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         assert hasattr(self, "_f")
         return self._f
 
-    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
-        print(f"__get__ self: {self} i: {instance} o: {owner}")
-        if instance is None:
-            print("__get___ instance is None returning self!")
+    def __get__(self, obj: _T | None, objtype: type[_T] | None = None, /) -> Callable[_P, _R_co]:
+        print(f"__get__ self: {self} i: {obj} o: {objtype}")
+        if obj is None:
+            print("__get___ obj is None returning self!")
             return self
-        self._i = instance
-        self._o = owner
+        if obj is not None:
+            self._i = obj
+        if objtype is not None:
+            self._o = objtype
+        self._o = objtype
         fr = self.__func__
         print(f"__get__ fr: {fr}")
-        pfr = functools.partial(fr, instance)
+        pfr = functools.partial(fr, obj)
         print(f"__get__ pfr: {pfr}")
         return pfr
 
@@ -101,7 +108,7 @@ class Bar:
         self._n = n
 
     @zlassmethod
-    def bar(self: Self, a: int, b: int, /) -> int:
+    def bar(self, a: int, b: int, /) -> int:
         # print(f"Bar._bar self: {self} a: {a} b: {b}")
         # print(f"Bar._bar Bar.bar: {Bar.bar}")
         # print(hasattr(getattr(Bar, "bar"), "wrapped"))
@@ -113,15 +120,27 @@ class Bar:
         # print(f"Bar.bar self._n: {self._n}")
         return a + b
 
+    def plain(self, a: int, b: int) -> int:
+        print(f"plain self: {self} a: {a} b: {b}")
+        return a + b
+
 
 b3 = Bar(7)
 
 # print(b3)
 # print(b3.bar)
 # print(b3.bar(Bar, 1, 2))
+print(b3.plain)
 print(b3.bar(1, 2))
+
+rinspect(Bar.plain, all=True)
+rinspect(b3.plain, all=True)
+
 
 if TYPE_CHECKING:
     reveal_type(b3)
+    reveal_type(b3.plain)
+    reveal_type(type(b3).plain)
+    reveal_type(b3.plain(1, 2))
     reveal_type(b3.bar)
     reveal_type(b3.bar(1, 2))
