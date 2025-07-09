@@ -55,6 +55,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
 
     def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]:
         print(f"__get__ self: {self} i: {instance} o: {owner}")
+        if instance is None:
+            print("__get___ instance is None returning self!")
+            return self
         self._i = instance
         self._o = owner
         fr = self.__func__
