@@ -14,7 +14,8 @@ from typing import (
     reveal_type,
 )
 
-from rich import print
+if not TYPE_CHECKING:
+    from rich import print
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
@@ -69,22 +70,22 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         __name__: str
         __qualname__: str
 
-    if sys.version_info >= (3, 14):
-        __annotate__: AnnotateFunc | None
+    # if sys.version_info >= (3, 14):
+    #     __annotate__: AnnotateFunc | None
 
-    @property
-    def __isabstractmethod__(self) -> bool:
-        print("__isabstractmethod__")
-        if hasattr(self._f, "__isabstractmethod__"):
-            return bool(self._f.__isabstractmethod__())
-        else:
-            return False
+    # @property
+    # def __isabstractmethod__(self) -> bool:
+    #     print("__isabstractmethod__")
+    #     if hasattr(self._f, "__isabstractmethod__"):
+    #         return bool(self._f.__isabstractmethod__())
+    #     else:
+    #         return False
 
     # if sys.version_info >= (3, 10):
-    @property
-    def wrapped(self) -> Callable[_P, _R_co]:
-        print("wrapped")
-        return self._f
+    # @property
+    # def wrapped(self) -> Callable[_P, _R_co]:
+    #     print("wrapped")
+    #     return self._f
 
     def __repr__(self) -> str:
         return f"<zlassmethod _i: {self._i} _f: {self._f} o: {self._o} at {id(self):#010x}>"
@@ -98,19 +99,19 @@ class Bar:
 
     @zlassmethod
     def bar(self: Self, a: int, b: int, /) -> int:
-        print(f"Bar._bar self: {self} a: {a} b: {b}")
-        print(f"Bar._bar Bar.bar: {Bar.bar}")
-        print(hasattr(Bar.bar, "wrapped"))
-        # print(getattr(Bar.bar, "wrapped"))
+        # print(f"Bar._bar self: {self} a: {a} b: {b}")
+        # print(f"Bar._bar Bar.bar: {Bar.bar}")
+        # print(hasattr(getattr(Bar, "bar"), "wrapped"))
+        # print(getattr(Bar, "bar").wrapped)
         # print(id(getattr(Bar.bar, "wrapped")))
-        print(f"id(Bar.bar): {id(Bar.bar):#010x}")
-        print(f"type(Bar.bar): {type(Bar.bar)}")
-        print(f"foo3: {vars(Bar)['bar'].wrapped}")
-        print(f"Bar.bar self._n: {self._n}")
+        # print(f"id(Bar.bar): {id(Bar.bar):#010x}")
+        # print(f"type(Bar.bar): {type(Bar.bar)}")
+        # print(f"foo3: {vars(Bar)['bar'].wrapped}")
+        # print(f"Bar.bar self._n: {self._n}")
         return a + b
 
 
-b3 = Bar(2)
+b3 = Bar(7)
 
 # print(b3)
 # print(b3.bar)
