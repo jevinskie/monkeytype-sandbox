@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import sys
 from collections.abc import Callable
 from types import GenericAlias
@@ -57,7 +58,9 @@ class zlassmethod(Generic[_T, _P, _R_co]):
         self._o = owner
         fr = self.__func__
         print(f"__get__ fr: {fr}")
-        return fr
+        pfr = functools.partial(fr, instance)
+        print(f"__get__ pfr: {pfr}")
+        return pfr
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"__set_name__ self: {self} owner: {owner} name: {name}")
@@ -109,10 +112,10 @@ class Bar:
 
 b3 = Bar(2)
 
-print(b3)
-print(b3.bar)
+# print(b3)
+# print(b3.bar)
 # print(b3.bar(Bar, 1, 2))
-print(b3.bar(b3, 1, 2))
+print(b3.bar(1, 2))
 
 if TYPE_CHECKING:
     reveal_type(b3)
