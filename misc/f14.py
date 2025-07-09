@@ -38,23 +38,23 @@ if TYPE_CHECKING:
 
 
 class Mathod(Generic[_T, _P, _R_co]):
-    _f: Callable[Concatenate[type[_T], _P], _R_co]
+    _f: Callable[Concatenate[_T, _P], _R_co]
 
-    def __init__(self, func: Callable[Concatenate[type[_T], _P], _R_co]) -> None:
+    def __init__(self, func: Callable[Concatenate[_T, _P], _R_co]) -> None:
         print(f"Mathod.__init__ func: {func}")
         self._f = func
 
     @overload
-    def __get__(
-        self, instance: None, owner: type, /
-    ) -> Callable[Concatenate[type[_T], _P], _R_co]: ...
+    def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
     @overload
-    def __get__(self, instance: _T, owner: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
+    def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
     def __get__(self, obj: _T | None, cls: type[_T] | None = None, /):
         print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
-            return self._f
-        return self._f.__get__(obj, cls)
+            fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
+            return fr2
+        fr: Callable[_P, _R_co] = self._f.__get__(obj, cls)
+        return fr
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
