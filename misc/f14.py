@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 import sys
 from collections.abc import Callable
-from types import GenericAlias
+from types import GenericAlias, MethodType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -146,7 +146,12 @@ class Bar:
 
     @Mathod
     def mathod(self, a: int, b: int) -> int:
-        print(f"plain self: {self} a: {a} b: {b}")
+        print(f"mathod self: {self} a: {a} b: {b}")
+        return a + b
+
+    @MethodType
+    def method(self, a: int, b: int) -> int:
+        print(f"mathod self: {self} a: {a} b: {b}")
         return a + b
 
 
@@ -159,11 +164,14 @@ print(b3.plain)
 print(b3.bar(1, 2))
 print(b3.mathod)
 print(b3.mathod(1, 2))
+print(b3.method)
+print(b3.method(1, 2))
 
 
 rinspect(Bar.mathod, all=True)
 rinspect(b3.mathod, all=True)
-
+rinspect(Bar.method, all=True)
+rinspect(b3.method, all=True)
 
 if TYPE_CHECKING:
     reveal_type(b3)
