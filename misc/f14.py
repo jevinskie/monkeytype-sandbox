@@ -58,16 +58,11 @@ class Mathod(Generic[_T, _T2, _P, _R_co]):
             if TYPE_CHECKING:
                 reveal_type(fr2)
             return fr2
-        # fr: Callable[_P, _R_co] = self._f.__get__(obj, cls)
-        # fr = self._f.__get__(obj, cls)
-        if TYPE_CHECKING:
-            reveal_type(self._f)
-            reveal_type(FunctionType)
-        # fr: Callable[_P, _R_co] = self._f.__get__(obj, cls)
         f = self._f
         if TYPE_CHECKING:
             reveal_type(f)
-        fr = f.__get__(obj, cls)
+        fr: Callable[_P, _R_co] = f.__get__(obj, cls)
+        # fr = f.__get__(obj, cls)
         if TYPE_CHECKING:
             reveal_type(fr)
         return fr
