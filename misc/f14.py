@@ -54,8 +54,8 @@ class zlassmethod(Generic[_T, _P, _R_co]):
             print("__func__ init _fg")
             assert self._i is not None
 
-            def fg(salf: _T, *args: _P.args, **kwargs: _P.kwargs) -> _R_co:
-                print(f"fg() salf: {salf} args: {args} kw: {kwargs}")
+            def fg(*args: _P.args, **kwargs: _P.kwargs) -> _R_co:
+                print(f"fg() self: {self} args: {args} kw: {kwargs}")
                 assert self._i is not None
                 return self._f(self._i, *args, **kwargs)
 
