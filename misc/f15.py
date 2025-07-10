@@ -81,7 +81,7 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         infos[key] = {"self": self, "name": name}
 
 
-class call_on_me:
+class call_on_me(Generic[_T, _P, _R_co]):
     _mod: str
     _qn: str
 
@@ -93,12 +93,12 @@ class call_on_me:
     # def __call__(
     #     self, func: Callable[Concatenate[_T, _P], _R_co], /
     # ) -> call_on_me_inner[_T, _P, _R_co]:
-    def __call__(self, func, /):
+    def __call__(self, func: _T, /) -> _T:
         comi = call_on_me_inner(func, self._mod, self._qn)
         print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
         if TYPE_CHECKING:
             reveal_type(comi)
-        return comi
+        return cast(_T, comi)
 
 
 def _fancy(self: Bar, a: int, b: int, /) -> int:
