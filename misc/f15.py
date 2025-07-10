@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from types import FunctionType
+from types import FunctionType, MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -101,10 +101,10 @@ class call_on_me(Generic[_T, _P, _R_co]):
         print(f"CoM.__set_name__ self: {self} owner: {obj} name: {name}")
         if obj is None:
             raise ValueError(f"none obj? {obj}")
-        if not hasattr(obj, "infos"):
-            d: dict[tuple[str, str], Any] = dict()
-            setattr(obj, "infos", d)
-        infos: dict[tuple[str, str], Any] = obj.infos
+        if not hasattr(obj, "_infos"):
+            d: dict[tuple[str, str], Any] = {}
+            setattr(obj, "_infos", d)
+        infos: dict[tuple[str, str], Any] = obj._infos
         key = (self._mod, self._qn)
         infos[key] = {"self": self, "name": name}
 
@@ -116,9 +116,16 @@ class call_on_me(Generic[_T, _P, _R_co]):
 
 class Bar:
     _n: int
+    _infos: dict[tuple[str, str], Any]
+    _infos_ro: MappingProxyType[tuple[str, str], Any]
 
     def __init__(self: Self, n: int) -> None:
         self._n = n
+        self._infos_ro = MappingProxyType(self._infos)
+
+    @property
+    def infos(self) -> MappingProxyType[tuple[str, str], Any]:
+        return self._infos_ro
 
     def plain(self: Self, a: int, b: int) -> int:
         print(f"plain self: {self} a: {a} b: {b}")
@@ -131,7 +138,7 @@ class Bar:
 
     @call_on_me("pycparser.c_ast", "Union")
     def fancy(self, a: int, b: int) -> int:
-        print(f"fancy self: {self} a: {a} b: {b}")
+        print(f"fancy self: {self} a: {a} b: {b} infos: {self.infos}")
         return a + b
 
 
