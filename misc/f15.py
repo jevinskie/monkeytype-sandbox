@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import (
     TYPE_CHECKING,
     Any,
     Concatenate,
     Generic,
+    NamedTuple,
     ParamSpec,
     TypeVar,
     cast,
     overload,
-    reveal_type,
 )
 
 if not TYPE_CHECKING:
@@ -23,19 +23,29 @@ _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
+class NamePath(NamedTuple):
+    module: str
+    qualname: str
+
+
+class AnnotatedMethodInfo(NamedTuple):
+    namepath: NamePath
+    name: str
+    method: MethodType
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
+    _np: NamePath
+    _n: str
     _f: Callable[Concatenate[_T, _P], _R_co]
-    _mod: str
-    _qn: str
 
     # FIXME: Need weakref?
 
     def __init__(
         self, func: Callable[Concatenate[_T, _P], _R_co], module: str, qualname: str
     ) -> None:
+        self._np = NamePath(module, qualname)
         self._f = func
-        self._mod = module
-        self._qn = qualname
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -49,16 +59,15 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return cast(Callable[_P, _R_co], self._f.__get__(obj, cls))
 
     def __set_name__(self, obj: Any, name: str) -> None:
+        self._n = name
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         if not hasattr(obj, "_infos"):
-            setattr(obj, "_infos", dict[tuple[str, str], Any]())
-        infos: dict[tuple[str, str], Any] = obj._infos
-        key = (self._mod, self._qn)
-        infos[key] = {"self": self, "name": name}
+            setattr(obj, "_infos", {})
+        obj._infos[self._np] = self.as_ntuple()
 
-    if TYPE_CHECKING:
-        reveal_type(__get__)
+    def as_ntuple(self) -> AnnotatedMethodInfo:
+        return AnnotatedMethodInfo(self._np, self._n, cast(MethodType, self))
 
 
 class rewriter:
@@ -74,52 +83,28 @@ class rewriter:
 
 
 class TypeRewriter:
-    _infos: dict[tuple[str, str], Any]
-    _infos_ro: MappingProxyType[tuple[str, str], Any]
+    _infos: dict[NamePath, AnnotatedMethodInfo]
+    _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
         self._infos_ro = MappingProxyType(self._infos)
 
-    def plain(self, a: int, b: int) -> int:
-        print(f"plain() self: {self} a: {a} b: {b}")
-        return a + b
-
     @rewriter("typing", "Union")
     def fancy(self, a: int, b: int) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+        print(f"fancy() self: {self} a: {a} b: {b} registry: {self.registry}")
         return a + b
 
     @rewriter("pycparser.c_ast", "Union")
     def mancy(self, a: int, b: int) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+        print(f"mancy() self: {self} a: {a} b: {b} registry: {self.registry}")
         return a * b
 
     @property
-    def infos(self) -> MappingProxyType[tuple[str, str], Any]:
+    def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
 
-    if TYPE_CHECKING:
-        reveal_type(plain)
-        reveal_type(fancy)
-        reveal_type(mancy)
-        reveal_type(infos)
 
-
-tr = TypeRewriter()
-print(f"tr.infos: {tr.infos}")
-print(f"TypeRewriter.fancy: {TypeRewriter.fancy}")
-print(f"tr.fancy: {tr.fancy}")
-print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
-print(f"TypeRewriter.fancy(b, 1, 2): {TypeRewriter.fancy(tr, 1, 2)}")
-print(f"tr.mancy(7, 11): {tr.mancy(7, 11)}")
-print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
-
-if TYPE_CHECKING:
-    reveal_type(TypeRewriter.plain)
-    reveal_type(tr.plain)
-    reveal_type(TypeRewriter.fancy)
-    reveal_type(tr.fancy)
-    reveal_type(TypeRewriter.mancy)
-    reveal_type(tr.mancy)
-    reveal_type(TypeRewriter.infos)
-    reveal_type(tr.infos)
+if __name__ == "__main__":
+    tr = TypeRewriter()
+    print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
+    print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
