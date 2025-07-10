@@ -46,9 +46,10 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
     def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
     @overload
     def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
-    def __get__(
-        self, obj: _T | None, cls: type[_T] | None = None, /
-    ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
+    def __get__(self, obj, cls=None, /):
+        # def __get__(
+        #     self, obj: _T | None, cls: type[_T] | None = None, /
+        # ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         print(f"CoMI.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
             # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
@@ -80,7 +81,7 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         infos[key] = {"self": self, "name": name}
 
 
-class call_on_me(Generic[_T, _P, _R_co]):
+class call_on_me:
     _mod: str
     _qn: str
 
@@ -89,9 +90,10 @@ class call_on_me(Generic[_T, _P, _R_co]):
         self._mod = module
         self._qn = qualname
 
-    def __call__(
-        self, func: Callable[Concatenate[_T, _P], _R_co], /
-    ) -> call_on_me_inner[_T, _P, _R_co]:
+    # def __call__(
+    #     self, func: Callable[Concatenate[_T, _P], _R_co], /
+    # ) -> call_on_me_inner[_T, _P, _R_co]:
+    def __call__(self, func, /):
         comi = call_on_me_inner(func, self._mod, self._qn)
         print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
         if TYPE_CHECKING:
@@ -114,12 +116,16 @@ class Bar:
     _infos: dict[tuple[str, str], Any]
     _infos_ro: MappingProxyType[tuple[str, str], Any]
 
-    fancy2: call_on_me_inner[Bar, [int, int], int] = call_on_me("pycparser.c_ast", "Union")(_fancy)
-    # fancy2 = _fcom(_fancy)
+    _fcom = call_on_me("pycparser.c_ast", "Union")
+    fancy2 = _fcom(_fancy)
+    # fancy2: call_on_me_inner[Bar, [int, int], int] = call_on_me("pycparser.c_ast", "Union")(_fancy)
 
     def __init__(self, n: int) -> None:
         self._n = n
         self._infos_ro = MappingProxyType(self._infos)
+
+    print(f"_fcom: {_fcom}")
+    print(f"fancy2: {fancy2}")
 
     @property
     def infos(self) -> MappingProxyType[tuple[str, str], Any]:
@@ -137,6 +143,7 @@ class Bar:
     if TYPE_CHECKING:
         reveal_type(plain)
         reveal_type(fancy)
+        reveal_type(_fcom)
         reveal_type(fancy2)
 
 
