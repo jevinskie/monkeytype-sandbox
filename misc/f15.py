@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from collections.abc import Callable
 from typing import (
     TYPE_CHECKING,
@@ -28,12 +27,6 @@ _P = ParamSpec("_P")
 _T = TypeVar("_T")
 _R_co = TypeVar("_R_co", covariant=True)
 
-if TYPE_CHECKING:
-    if sys.version_info >= (3, 14):
-        from _typeshed import AnnotateFunc
-    else:
-        AnnotateFunc = Any
-
 
 class Mathod(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[_T, _P], _R_co]
@@ -57,11 +50,10 @@ class Mathod(Generic[_T, _P, _R_co]):
                 reveal_type(fr2)
             return fr2
         f = self._f
-        if TYPE_CHECKING:
-            reveal_type(f)
         fr = f.__get__(obj, cls)
         frc = cast(Callable[_P, _R_co], fr)
         if TYPE_CHECKING:
+            reveal_type(f)
             reveal_type(fr)
             reveal_type(frc)
         return frc
@@ -87,36 +79,5 @@ class Bar:
 
 
 b = Bar(7)
-
-
-print(Bar.plain)
-print(Bar.mathod)
-print(b.plain)
-print(b.mathod)
-print(b.plain(1, 2))
 print(b.mathod(1, 2))
 print(Bar.mathod(b, 1, 2))
-print(getattr(Bar, "mathod"))
-print(getattr(b, "mathod"))
-
-# rinspect(Bar.plain, all=True)
-# rinspect(b.plain, all=True)
-# rinspect(Bar.mathod, all=True)
-# rinspect(b.mathod, all=True)
-
-if TYPE_CHECKING:
-    reveal_type(b)
-
-    reveal_type(b.plain)
-    reveal_type(Bar.plain)
-    reveal_type(getattr(b, "plain"))
-    reveal_type(getattr(Bar, "plain"))
-
-    reveal_type(b.mathod)
-    reveal_type(Bar.mathod)
-    reveal_type(getattr(Bar, "mathod"))
-    reveal_type(getattr(b, "mathod"))
-
-    reveal_type(b.plain(1, 2))
-    reveal_type(b.mathod(1, 2))
-    reveal_type(Bar.mathod(b, 1, 2))
