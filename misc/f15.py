@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from types import FunctionType, MappingProxyType
+from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -108,10 +108,32 @@ class call_on_me(Generic[_T, _P, _R_co]):
         key = (self._mod, self._qn)
         infos[key] = {"self": self, "name": name}
 
-    def __call__(self, func: FunctionType, /) -> Self:
+    @property
+    def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
+        print(f"CoM.__func__ self: {self}")
+        return self._f
+
+    def __call__(self, func: Callable[Concatenate[_T, _P], _R_co], /) -> Self:
         print(f"CoM.__call__ self: {self} func: {func}")
         self._f = func
         return self
+
+    if TYPE_CHECKING:
+        reveal_type(__call__)
+    print(__call__)
+
+
+print(call_on_me.__call__)
+
+
+def _fancy(self, a: int, b: int) -> int:
+    print(f"_fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+    return a + b
+
+
+print(f"_fancy: {_fancy}")
+if TYPE_CHECKING:
+    reveal_type(_fancy)
 
 
 class Bar:
@@ -119,7 +141,10 @@ class Bar:
     _infos: dict[tuple[str, str], Any]
     _infos_ro: MappingProxyType[tuple[str, str], Any]
 
-    def __init__(self: Self, n: int) -> None:
+    _fcom = call_on_me("pycparser.c_ast", "Union")
+    fancy = _fcom(_fancy)
+
+    def __init__(self, n: int) -> None:
         self._n = n
         self._infos_ro = MappingProxyType(self._infos)
 
@@ -127,7 +152,7 @@ class Bar:
     def infos(self) -> MappingProxyType[tuple[str, str], Any]:
         return self._infos_ro
 
-    def plain(self: Self, a: int, b: int) -> int:
+    def plain(self, a: int, b: int) -> int:
         print(f"plain self: {self} a: {a} b: {b}")
         return a + b
 
@@ -136,10 +161,11 @@ class Bar:
         print(f"mathod self: {self} a: {a} b: {b}")
         return a + b
 
-    @call_on_me("pycparser.c_ast", "Union")
-    def fancy(self, a: int, b: int) -> int:
-        print(f"fancy self: {self} a: {a} b: {b} infos: {self.infos}")
-        return a + b
+    print(f"_fcom: {_fcom}")
+    print(f"fancy: {fancy}")
+    if TYPE_CHECKING:
+        reveal_type(_fcom)
+        reveal_type(fancy)
 
 
 b = Bar(7)
