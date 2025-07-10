@@ -87,7 +87,7 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         reveal_type(__get__)
 
 
-class call_on_me(Generic[_TO]):
+class call_on_me:
     _mod: str
     _qn: str
 
@@ -181,3 +181,5 @@ if TYPE_CHECKING:
     reveal_type(Bar.infos)
     reveal_type(b.infos)
     reveal_type(b.fancy2(1, 2))
+    reveal_type(Bar._fu2)
+    reveal_type(b._fu2)
