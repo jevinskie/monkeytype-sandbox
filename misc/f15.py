@@ -26,6 +26,7 @@ else:
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
+_TO = TypeVar("_TO")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
@@ -81,7 +82,7 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         infos[key] = {"self": self, "name": name}
 
 
-class call_on_me(Generic[_T, _P, _R_co]):
+class call_on_me(Generic[_TO, _T, _P, _R_co]):
     _mod: str
     _qn: str
 
@@ -93,12 +94,12 @@ class call_on_me(Generic[_T, _P, _R_co]):
     # def __call__(
     #     self, func: Callable[Concatenate[_T, _P], _R_co], /
     # ) -> call_on_me_inner[_T, _P, _R_co]:
-    def __call__(self, func: _T, /) -> _T:
-        comi = call_on_me_inner(func, self._mod, self._qn)
+    def __call__(self, func: _T, /) -> call_on_me_inner[_T, _P, _R_co]:
+        comi: call_on_me_inner[_T, _P, _R_co] = call_on_me_inner(func, self._mod, self._qn)
         print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
         if TYPE_CHECKING:
             reveal_type(comi)
-        return cast(_T, comi)
+        return comi
 
 
 def _fancy(self: Bar, a: int, b: int, /) -> int:
@@ -116,7 +117,7 @@ class Bar:
     _infos: dict[tuple[str, str], Any]
     _infos_ro: MappingProxyType[tuple[str, str], Any]
 
-    _fcom = call_on_me("pycparser.c_ast", "Union")
+    _fcom: call_on_me[Bar, Bar, [int, int], int] = call_on_me("pycparser.c_ast", "Union")
     fancy2 = _fcom(_fancy)
     # fancy2: call_on_me_inner[Bar, [int, int], int] = call_on_me("pycparser.c_ast", "Union")(_fancy)
 
@@ -164,3 +165,4 @@ if TYPE_CHECKING:
     reveal_type(b.fancy2)
     reveal_type(Bar.infos)
     reveal_type(b.infos)
+    reveal_type(b.fancy2(1, 2))
