@@ -93,15 +93,12 @@ class call_on_me:
     _mod: str
     _qn: str
 
-    def __init__(self, module: str, qualname: str, /) -> None:
+    def __init__(self, module: str, qualname: str) -> None:
         print(f"CoM.__init__ mod: {module} qn: {qualname}")
         self._mod = module
         self._qn = qualname
 
     def __call__(self, func: _F, /) -> _F:
-        # def __call__(self, func: _TO, /) -> call_on_me_inner[_T, _P, _R_co]:
-        # comi: call_on_me_inner[_T, _P, _R_co] = call_on_me_inner(func, self._mod, self._qn)
-        # cfunc = cast(Callable[Concatenate[_T, _P], _R_co], func)
         comi = call_on_me_inner(func, self._mod, self._qn)
         print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
         comr = cast(_F, comi)
@@ -133,10 +130,16 @@ class Bar:
         print(f"fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
         return a + b
 
+    @call_on_me("pycparser.c_ast", "Union")
+    def mancy(self, a: int, b: int) -> int:
+        print(f"mancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+        return a * b
+
     if TYPE_CHECKING:
         reveal_type(plain)
         reveal_type(fancy)
         reveal_type(infos)
+        reveal_type(mancy)
 
 
 b = Bar(7)
@@ -145,11 +148,15 @@ print(f"Bar.fancy: {Bar.fancy}")
 print(f"b.fancy: {b.fancy}")
 print(f"b.fancy(1, 2): {b.fancy(1, 2)}")
 print(f"Bar.fancy(b, 1, 2): {Bar.fancy(b, 1, 2)}")
+print(f"b.mancy(7, 11): {b.fancy(7, 11)}")
+print(f"Bar.mancy(b, 7, 11): {Bar.fancy(b, 7, 11)}")
 
 if TYPE_CHECKING:
     reveal_type(Bar.plain)
     reveal_type(b.plain)
     reveal_type(Bar.fancy)
     reveal_type(b.fancy)
+    reveal_type(Bar.mancy)
+    reveal_type(b.mancy)
     reveal_type(Bar.infos)
     reveal_type(b.infos)
