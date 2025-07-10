@@ -50,7 +50,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
 
     def __set_name__(self, obj: Any, name: str) -> None:
         if obj is None:
-            raise ValueError(f"none obj? {obj}")
+            raise ValueError(f"None obj? {obj}")
         if not hasattr(obj, "_infos"):
             setattr(obj, "_infos", dict[tuple[str, str], Any]())
         infos: dict[tuple[str, str], Any] = obj._infos
