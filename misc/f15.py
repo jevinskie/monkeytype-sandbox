@@ -9,6 +9,7 @@ from typing import (
     Generic,
     ParamSpec,
     TypeVar,
+    cast,
     overload,
     reveal_type,
 )
@@ -58,11 +59,12 @@ class Mathod(Generic[_T, _P, _R_co]):
         f = self._f
         if TYPE_CHECKING:
             reveal_type(f)
-        fr: Callable[_P, _R_co] = f.__get__(obj, cls)
-        # fr = f.__get__(obj, cls)
+        fr = f.__get__(obj, cls)
+        frc = cast(Callable[_P, _R_co], fr)
         if TYPE_CHECKING:
             reveal_type(fr)
-        return fr
+            reveal_type(frc)
+        return frc
 
     def __set_name__(self, owner: Any, name: Any) -> None:
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
