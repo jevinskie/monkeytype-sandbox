@@ -96,9 +96,6 @@ class call_on_me:
         self._mod = module
         self._qn = qualname
 
-    # def __call__(
-    #     self, func: Callable[Concatenate[_T, _P], _R_co], /
-    # ) -> call_on_me_inner[_T, _P, _R_co]:
     def __call__(self, func: _TO, /) -> _TO:
         # def __call__(self, func: _TO, /) -> call_on_me_inner[_T, _P, _R_co]:
         # comi: call_on_me_inner[_T, _P, _R_co] = call_on_me_inner(func, self._mod, self._qn)
@@ -110,36 +107,14 @@ class call_on_me:
         return comi
 
 
-def _fancy(self: Bar, a: int, b: int, /) -> int:
-    print(f"_fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
-    return a + b
-
-
-print(f"_fancy: {_fancy}")
-if TYPE_CHECKING:
-    reveal_type(_fancy)
-
-
 class Bar:
     _n: int
     _infos: dict[tuple[str, str], Any]
     _infos_ro: MappingProxyType[tuple[str, str], Any]
 
-    _fcomu = call_on_me("pycparser.c_ast", "Union")
-    _fu = _fcomu(_fancy)
-    _fu2 = call_on_me("mickey", "Mouse")(_fancy)
-    _fcom: Callable[[Callable[[Bar, int, int], int]], Callable[[Bar, int, int], int]] = call_on_me(
-        "pycparser.c_ast", "Union"
-    )
-    fancy2 = _fcom(_fancy)
-    # fancy2: call_on_me_inner[Bar, [int, int], int] = call_on_me("pycparser.c_ast", "Union")(_fancy)
-
     def __init__(self, n: int) -> None:
         self._n = n
         self._infos_ro = MappingProxyType(self._infos)
-
-    print(f"_fcom: {_fcom}")
-    print(f"fancy2: {fancy2}")
 
     @property
     def infos(self) -> MappingProxyType[tuple[str, str], Any]:
@@ -157,10 +132,7 @@ class Bar:
     if TYPE_CHECKING:
         reveal_type(plain)
         reveal_type(fancy)
-        reveal_type(_fcomu)
-        reveal_type(_fu)
-        reveal_type(_fcom)
-        reveal_type(fancy2)
+        reveal_type(infos)
 
 
 b = Bar(7)
@@ -168,7 +140,6 @@ print(f"b.infos: {b.infos}")
 print(f"Bar.fancy: {Bar.fancy}")
 print(f"b.fancy: {b.fancy}")
 print(f"b.fancy(1, 2): {b.fancy(1, 2)}")
-print(f"b.fancy2(1, 2): {b.fancy2(1, 2)}")
 print(f"Bar.fancy(b, 1, 2): {Bar.fancy(b, 1, 2)}")
 
 if TYPE_CHECKING:
@@ -176,10 +147,5 @@ if TYPE_CHECKING:
     reveal_type(b.plain)
     reveal_type(Bar.fancy)
     reveal_type(b.fancy)
-    reveal_type(Bar.fancy2)
-    reveal_type(b.fancy2)
     reveal_type(Bar.infos)
     reveal_type(b.infos)
-    reveal_type(b.fancy2(1, 2))
-    reveal_type(Bar._fu2)
-    reveal_type(b._fu2)
