@@ -7,6 +7,7 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -62,6 +63,54 @@ class Mathod(Generic[_T, _P, _R_co]):
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
 
 
+class call_on_me(Generic[_T, _P, _R_co]):
+    _mod: str
+    _qn: str
+    _f: Callable[Concatenate[_T, _P], _R_co]
+
+    def __init__(self, module: str, qualname: str, /) -> None:
+        print(f"CoM.__init__ mod: {module} qn: {qualname}")
+        self._mod = module
+        self._qn = qualname
+
+    @overload
+    def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
+    @overload
+    def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
+    def __get__(
+        self, obj: _T | None, cls: type[_T] | None = None, /
+    ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
+        print(f"CoM.__get__ self: {self} obj: {obj} cls: {cls}")
+        if obj is None:
+            # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
+            fr2 = self._f
+            if TYPE_CHECKING:
+                reveal_type(fr2)
+            return fr2
+        f = self._f
+        fr = f.__get__(obj, cls)
+        frc = cast(Callable[_P, _R_co], fr)
+        if TYPE_CHECKING:
+            reveal_type(f)
+            reveal_type(fr)
+            reveal_type(frc)
+        return frc
+
+    def __set_name__(self, obj: Any, name: Any) -> None:
+        print(f"CoM.__set_name__ self: {self} owner: {obj} name: {name}")
+        if obj is None:
+            raise ValueError(f"none obj? {obj}")
+        if not hasattr(obj, "infos"):
+            d: dict[tuple[str, str], Any] = dict()
+            setattr(obj, "infos", d)
+        obj.infos[(self._mod, self._qn)] = {"self": self, "name": name}
+
+    def __call__(self, func, /) -> Self:
+        print(f"CoM.__call__ self: {self} func: {func}")
+        self._f = func
+        return self
+
+
 class Bar:
     _n: int
 
@@ -77,7 +126,13 @@ class Bar:
         print(f"mathod self: {self} a: {a} b: {b}")
         return a + b
 
+    @call_on_me("pycparser.c_ast", "Union")
+    def fancy(self, a: int, b: int) -> int:
+        print(f"fancy self: {self} a: {a} b: {b}")
+        return a + b
+
 
 b = Bar(7)
-print(b.mathod(1, 2))
-print(Bar.mathod(b, 1, 2))
+print(b.infos)
+print(b.fancy(1, 2))
+print(Bar.fancy(b, 1, 2))
