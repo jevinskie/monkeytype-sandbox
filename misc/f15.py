@@ -8,7 +8,6 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
-    Self,
     TypeVar,
     cast,
     overload,
@@ -64,13 +63,16 @@ class Mathod(Generic[_T, _P, _R_co]):
         print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
 
 
-class call_on_me(Generic[_T, _P, _R_co]):
+class call_on_me_inner(Generic[_T, _P, _R_co]):
+    _f: Callable[Concatenate[_T, _P], _R_co]
     _mod: str
     _qn: str
-    _f: Callable[Concatenate[_T, _P], _R_co]
 
-    def __init__(self, module: str, qualname: str, /) -> None:
-        print(f"CoM.__init__ mod: {module} qn: {qualname}")
+    def __init__(
+        self, func: Callable[Concatenate[_T, _P], _R_co], module: str, qualname: str, /
+    ) -> None:
+        print(f"CoMI.__init__ func: {func} module: {module} qualname: {qualname}")
+        self._f = func
         self._mod = module
         self._qn = qualname
 
@@ -81,13 +83,13 @@ class call_on_me(Generic[_T, _P, _R_co]):
     def __get__(
         self, obj: _T | None, cls: type[_T] | None = None, /
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
-        print(f"CoM.__get__ self: {self} obj: {obj} cls: {cls}")
+        print(f"CoMI.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
             # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
             fr2 = self._f
             if TYPE_CHECKING:
                 reveal_type(fr2)
-            print("CoM.__get__ returning function")
+            print("CoMI.__get__ returning function")
             return fr2
         f = self._f
         fr = f.__get__(obj, cls)
@@ -96,28 +98,77 @@ class call_on_me(Generic[_T, _P, _R_co]):
             reveal_type(f)
             reveal_type(fr)
             reveal_type(frc)
-        print("CoM.__get__ returning bound method")
+        print("CoMI.__get__ returning bound method")
         return frc
 
     def __set_name__(self, obj: Any, name: Any) -> None:
-        print(f"CoM.__set_name__ self: {self} owner: {obj} name: {name}")
+        print(f"CoMI.__set_name__ self: {self} owner: {obj} name: {name}")
         if obj is None:
             raise ValueError(f"none obj? {obj}")
         if not hasattr(obj, "_infos"):
             d: dict[tuple[str, str], Any] = {}
             setattr(obj, "_infos", d)
         infos: dict[tuple[str, str], Any] = obj._infos
+        # infos = {}
         key = (self._mod, self._qn)
         infos[key] = {"self": self, "name": name}
 
-    def __call__(self, func: Callable[Concatenate[_T, _P], _R_co], /) -> Self:
+
+class call_on_me(Generic[_T, _P, _R_co]):
+    _mod: str
+    _qn: str
+    _f: Callable[Concatenate[_T, _P], _R_co]
+
+    def __init__(self, module: str, qualname: str, /) -> None:
+        print(f"CoM.__init__ mod: {module} qn: {qualname}")
+        self._mod = module
+        self._qn = qualname
+
+    # @overload
+    # def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
+    # @overload
+    # def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
+    # def __get__(
+    #     self, obj: _T | None, cls: type[_T] | None = None, /
+    # ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
+    #     print(f"CoM.__get__ self: {self} obj: {obj} cls: {cls}")
+    #     if obj is None:
+    #         # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
+    #         fr2 = self._f
+    #         if TYPE_CHECKING:
+    #             reveal_type(fr2)
+    #         print("CoM.__get__ returning function")
+    #         return fr2
+    #     f = self._f
+    #     fr = f.__get__(obj, cls)
+    #     frc = cast(Callable[_P, _R_co], fr)
+    #     if TYPE_CHECKING:
+    #         reveal_type(f)
+    #         reveal_type(fr)
+    #         reveal_type(frc)
+    #     print("CoM.__get__ returning bound method")
+    #     return frc
+
+    # def __set_name__(self, obj: Any, name: Any) -> None:
+    #     print(f"CoM.__set_name__ self: {self} owner: {obj} name: {name}")
+    #     if obj is None:
+    #         raise ValueError(f"none obj? {obj}")
+    #     if not hasattr(obj, "_infos"):
+    #         d: dict[tuple[str, str], Any] = {}
+    #         setattr(obj, "_infos", d)
+    #     infos: dict[tuple[str, str], Any] = obj._infos
+    #     # infos = {}
+    #     key = (self._mod, self._qn)
+    #     infos[key] = {"self": self, "name": name}
+
+    def __call__(self, func: Callable[Concatenate[_T, _P], _R_co], /) -> call_on_me_inner:
         print(f"CoM.__call__ self: {self} func: {func}")
         self._f = func
-        return self
-
-    if TYPE_CHECKING:
-        reveal_type(__call__)
-    print(__call__)
+        comi = call_on_me_inner(func, self._mod, self._qn)
+        print(f"CoM.__call__ comi: {comi}")
+        if TYPE_CHECKING:
+            reveal_type(comi)
+        return comi
 
 
 # print(call_on_me.__call__)
@@ -143,6 +194,8 @@ class Bar:
 
     def __init__(self, n: int) -> None:
         self._n = n
+        # if not hasattr(self, "_infos"):
+        #     self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
     @property
@@ -172,6 +225,8 @@ class Bar:
 
 b = Bar(7)
 # print(b.infos)
+print(Bar.fancy)
+print(b.fancy)
 print(b.fancy(1, 2))
 # print(Bar.fancy(b, 1, 2))
 
