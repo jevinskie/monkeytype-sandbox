@@ -17,30 +17,22 @@ from typing import (
 if not TYPE_CHECKING:
     from rich import print
 
-if not TYPE_CHECKING:
-    from rich import inspect as rinspect
-else:
-
-    def rinspect(*args: Any, **kwargs: Any) -> None: ...
-
-
-_P = ParamSpec("_P")
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
-_TT = TypeVar("_TT", bound=type[Any])
-_TO = TypeVar("_TO")
+_P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
-class call_on_me_inner(Generic[_T, _P, _R_co]):
+class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[_T, _P], _R_co]
     _mod: str
     _qn: str
 
+    # FIXME: Need weakref?
+
     def __init__(
-        self, func: Callable[Concatenate[_T, _P], _R_co], module: str, qualname: str, /
+        self, func: Callable[Concatenate[_T, _P], _R_co], module: str, qualname: str
     ) -> None:
-        print(f"CoMI.__init__ func: {func} module: {module} qualname: {qualname}")
         self._f = func
         self._mod = module
         self._qn = qualname
@@ -52,36 +44,16 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
     def __get__(
         self, obj: _T | None, cls: type[_T] | None = None, /
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
-        # def __get__(
-        #     self, obj: _T | None, cls: type[_T] | None = None, /
-        # ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
-        print(f"CoMI.__get__ self: {self} obj: {obj} cls: {cls}")
         if obj is None:
-            # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
-            fr2 = self._f
-            if TYPE_CHECKING:
-                reveal_type(fr2)
-            print("CoMI.__get__ returning function")
-            return fr2
-        f = self._f
-        fr = f.__get__(obj, cls)
-        frc = cast(Callable[_P, _R_co], fr)
-        if TYPE_CHECKING:
-            reveal_type(f)
-            reveal_type(fr)
-            reveal_type(frc)
-        print("CoMI.__get__ returning bound method")
-        return frc
+            return self._f
+        return cast(Callable[_P, _R_co], self._f.__get__(obj, cls))
 
-    def __set_name__(self, obj: Any, name: Any) -> None:
-        print(f"CoMI.__set_name__ self: {self} owner: {obj} name: {name}")
+    def __set_name__(self, obj: Any, name: str) -> None:
         if obj is None:
             raise ValueError(f"none obj? {obj}")
         if not hasattr(obj, "_infos"):
-            d: dict[tuple[str, str], Any] = {}
-            setattr(obj, "_infos", d)
+            setattr(obj, "_infos", dict[tuple[str, str], Any]())
         infos: dict[tuple[str, str], Any] = obj._infos
-        # infos = {}
         key = (self._mod, self._qn)
         infos[key] = {"self": self, "name": name}
 
@@ -89,74 +61,65 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         reveal_type(__get__)
 
 
-class call_on_me:
+class rewriter:
     _mod: str
     _qn: str
 
     def __init__(self, module: str, qualname: str) -> None:
-        print(f"CoM.__init__ mod: {module} qn: {qualname}")
         self._mod = module
         self._qn = qualname
 
-    def __call__(self, func: _F, /) -> _F:
-        comi = call_on_me_inner(func, self._mod, self._qn)
-        print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
-        comr = cast(_F, comi)
-        if TYPE_CHECKING:
-            reveal_type(comi)
-            reveal_type(comr)
-        return comr
+    def __call__(self, func: _F) -> _F:
+        return cast(_F, AnnotatedMethod(func, self._mod, self._qn))
 
 
-class Bar:
-    _n: int
+class TypeRewriter:
     _infos: dict[tuple[str, str], Any]
     _infos_ro: MappingProxyType[tuple[str, str], Any]
 
-    def __init__(self, n: int) -> None:
-        self._n = n
+    def __init__(self) -> None:
         self._infos_ro = MappingProxyType(self._infos)
+
+    def plain(self, a: int, b: int) -> int:
+        print(f"plain() self: {self} a: {a} b: {b}")
+        return a + b
+
+    @rewriter("typing", "Union")
+    def fancy(self, a: int, b: int) -> int:
+        print(f"fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+        return a + b
+
+    @rewriter("pycparser.c_ast", "Union")
+    def mancy(self, a: int, b: int) -> int:
+        print(f"mancy() self: {self} a: {a} b: {b} infos: {self.infos}")
+        return a * b
 
     @property
     def infos(self) -> MappingProxyType[tuple[str, str], Any]:
         return self._infos_ro
 
-    def plain(self, a: int, b: int, /) -> int:
-        print(f"plain() self: {self} a: {a} b: {b}")
-        return a + b
-
-    @call_on_me("typing", "Union")
-    def fancy(self, a: int, b: int, /) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
-        return a + b
-
-    @call_on_me("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} infos: {self.infos}")
-        return a * b
-
     if TYPE_CHECKING:
         reveal_type(plain)
         reveal_type(fancy)
-        reveal_type(infos)
         reveal_type(mancy)
+        reveal_type(infos)
 
 
-b = Bar(7)
-print(f"b.infos: {b.infos}")
-print(f"Bar.fancy: {Bar.fancy}")
-print(f"b.fancy: {b.fancy}")
-print(f"b.fancy(1, 2): {b.fancy(1, 2)}")
-print(f"Bar.fancy(b, 1, 2): {Bar.fancy(b, 1, 2)}")
-print(f"b.mancy(7, 11): {b.fancy(7, 11)}")
-print(f"Bar.mancy(b, 7, 11): {Bar.fancy(b, 7, 11)}")
+tr = TypeRewriter()
+print(f"tr.infos: {tr.infos}")
+print(f"TypeRewriter.fancy: {TypeRewriter.fancy}")
+print(f"tr.fancy: {tr.fancy}")
+print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
+print(f"TypeRewriter.fancy(b, 1, 2): {TypeRewriter.fancy(tr, 1, 2)}")
+print(f"tr.mancy(7, 11): {tr.mancy(7, 11)}")
+print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
 
 if TYPE_CHECKING:
-    reveal_type(Bar.plain)
-    reveal_type(b.plain)
-    reveal_type(Bar.fancy)
-    reveal_type(b.fancy)
-    reveal_type(Bar.mancy)
-    reveal_type(b.mancy)
-    reveal_type(Bar.infos)
-    reveal_type(b.infos)
+    reveal_type(TypeRewriter.plain)
+    reveal_type(tr.plain)
+    reveal_type(TypeRewriter.fancy)
+    reveal_type(tr.fancy)
+    reveal_type(TypeRewriter.mancy)
+    reveal_type(tr.mancy)
+    reveal_type(TypeRewriter.infos)
+    reveal_type(tr.infos)
