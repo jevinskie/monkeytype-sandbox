@@ -29,40 +29,6 @@ _T = TypeVar("_T")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
-class Mathod(Generic[_T, _P, _R_co]):
-    _f: Callable[Concatenate[_T, _P], _R_co]
-
-    def __init__(self, func: Callable[Concatenate[_T, _P], _R_co]) -> None:
-        print(f"Mathod.__init__ func: {func}")
-        self._f = func
-
-    @overload
-    def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
-    @overload
-    def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
-    def __get__(
-        self, obj: _T | None, cls: type[_T] | None = None, /
-    ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
-        print(f"Mathod.__get__ self: {self} obj: {obj} cls: {cls}")
-        if obj is None:
-            # fr2: Callable[Concatenate[_T, _P], _R_co] = self._f
-            fr2 = self._f
-            if TYPE_CHECKING:
-                reveal_type(fr2)
-            return fr2
-        f = self._f
-        fr = f.__get__(obj, cls)
-        frc = cast(Callable[_P, _R_co], fr)
-        if TYPE_CHECKING:
-            reveal_type(f)
-            reveal_type(fr)
-            reveal_type(frc)
-        return frc
-
-    def __set_name__(self, owner: Any, name: Any) -> None:
-        print(f"Mathod.__set_name__ self: {self} owner: {owner} name: {name}")
-
-
 class call_on_me_inner(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[_T, _P], _R_co]
     _mod: str
@@ -163,11 +129,6 @@ class Bar:
         print(f"plain() self: {self} a: {a} b: {b}")
         return a + b
 
-    @Mathod
-    def mathod(self, a: int, b: int, /) -> int:
-        print(f"mathod() self: {self} a: {a} b: {b}")
-        return a + b
-
     @call_on_me("typing", "Union")
     def fancy(self, a: int, b: int, /) -> int:
         print(f"fancy() self: {self} a: {a} b: {b} infos: {self.infos}")
@@ -190,8 +151,6 @@ print(f"Bar.fancy(b, 1, 2): {Bar.fancy(b, 1, 2)}")
 if TYPE_CHECKING:
     reveal_type(Bar.plain)
     reveal_type(b.plain)
-    reveal_type(Bar.mathod)
-    reveal_type(b.mathod)
     reveal_type(Bar.fancy)
     reveal_type(b.fancy)
     reveal_type(Bar.fancy2)
