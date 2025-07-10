@@ -15,7 +15,10 @@ from typing import (
 )
 
 if not TYPE_CHECKING:
-    from rich import print
+    try:
+        from rich import print
+    except ImportError:
+        pass
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
