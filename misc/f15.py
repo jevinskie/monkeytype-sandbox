@@ -44,10 +44,12 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         self._qn = qualname
 
     @overload
-    def __get__(self, obj: None, cls: type, /) -> Callable[Concatenate[_T, _P], _R_co]: ...
+    def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
     @overload
     def __get__(self, obj: _T, cls: type[_T] | None = None, /) -> Callable[_P, _R_co]: ...
-    def __get__(self, obj, cls=None, /):
+    def __get__(
+        self, obj: _T | None, cls: type[_T] | None = None, /
+    ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         # def __get__(
         #     self, obj: _T | None, cls: type[_T] | None = None, /
         # ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
@@ -80,6 +82,9 @@ class call_on_me_inner(Generic[_T, _P, _R_co]):
         # infos = {}
         key = (self._mod, self._qn)
         infos[key] = {"self": self, "name": name}
+
+    if TYPE_CHECKING:
+        reveal_type(__get__)
 
 
 class call_on_me(Generic[_TO, _T, _P, _R_co]):
