@@ -104,7 +104,9 @@ class call_on_me(Generic[_T, _P, _R_co]):
         if not hasattr(obj, "infos"):
             d: dict[tuple[str, str], Any] = dict()
             setattr(obj, "infos", d)
-        obj.infos[(self._mod, self._qn)] = {"self": self, "name": name}
+        infos: dict[tuple[str, str], Any] = obj.infos
+        key = (self._mod, self._qn)
+        infos[key] = {"self": self, "name": name}
 
     def __call__(self, func: FunctionType, /) -> Self:
         print(f"CoM.__call__ self: {self} func: {func}")
