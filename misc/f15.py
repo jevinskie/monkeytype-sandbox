@@ -26,6 +26,8 @@ else:
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
+_F = TypeVar("_F", bound=Callable[..., Any])
+_TT = TypeVar("_TT", bound=type[Any])
 _TO = TypeVar("_TO")
 _R_co = TypeVar("_R_co", covariant=True)
 
@@ -96,15 +98,17 @@ class call_on_me:
         self._mod = module
         self._qn = qualname
 
-    def __call__(self, func: _TO, /) -> _TO:
+    def __call__(self, func: _F, /) -> _F:
         # def __call__(self, func: _TO, /) -> call_on_me_inner[_T, _P, _R_co]:
         # comi: call_on_me_inner[_T, _P, _R_co] = call_on_me_inner(func, self._mod, self._qn)
         # cfunc = cast(Callable[Concatenate[_T, _P], _R_co], func)
         comi = call_on_me_inner(func, self._mod, self._qn)
         print(f"CoM.__call__ self: {self} func: {func} comi: {comi}")
+        comr = cast(_F, comi)
         if TYPE_CHECKING:
             reveal_type(comi)
-        return comi
+            reveal_type(comr)
+        return comr
 
 
 class Bar:
