@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from types import FunctionType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -105,7 +106,7 @@ class call_on_me(Generic[_T, _P, _R_co]):
             setattr(obj, "infos", d)
         obj.infos[(self._mod, self._qn)] = {"self": self, "name": name}
 
-    def __call__(self, func, /) -> Self:
+    def __call__(self, func: FunctionType, /) -> Self:
         print(f"CoM.__call__ self: {self} func: {func}")
         self._f = func
         return self
@@ -114,10 +115,10 @@ class call_on_me(Generic[_T, _P, _R_co]):
 class Bar:
     _n: int
 
-    def __init__(self, n: int) -> None:
+    def __init__(self: Self, n: int) -> None:
         self._n = n
 
-    def plain(self, a: int, b: int) -> int:
+    def plain(self: Self, a: int, b: int) -> int:
         print(f"plain self: {self} a: {a} b: {b}")
         return a + b
 
@@ -136,3 +137,11 @@ b = Bar(7)
 print(b.infos)
 print(b.fancy(1, 2))
 print(Bar.fancy(b, 1, 2))
+
+if TYPE_CHECKING:
+    reveal_type(Bar.plain)
+    reveal_type(b.plain)
+    reveal_type(Bar.mathod)
+    reveal_type(b.mathod)
+    reveal_type(Bar.fancy)
+    reveal_type(b.fancy)
