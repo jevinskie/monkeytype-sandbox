@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable
-from types import FunctionType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -26,8 +25,6 @@ else:
 
 _P = ParamSpec("_P")
 _T = TypeVar("_T")
-_T2 = TypeVar("_T2", bound=FunctionType)
-_T_co = TypeVar("_T_co", covariant=True)
 _R_co = TypeVar("_R_co", covariant=True)
 
 if TYPE_CHECKING:
@@ -37,7 +34,7 @@ if TYPE_CHECKING:
         AnnotateFunc = Any
 
 
-class Mathod(Generic[_T, _T2, _P, _R_co]):
+class Mathod(Generic[_T, _P, _R_co]):
     _f: Callable[Concatenate[_T, _P], _R_co]
 
     def __init__(self, func: Callable[Concatenate[_T, _P], _R_co]) -> None:
