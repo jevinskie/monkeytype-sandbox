@@ -86,6 +86,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         p = partial(self._f.__get__(obj, cls), meta=self.as_ntuple())
         return cast(Callable[_P, _R_co], p)
 
+    def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
+        return self._f
+
     def __set_name__(self, obj: Any, name: str) -> None:
         self._n = name
         if obj is None:
