@@ -56,6 +56,12 @@ def dotted_getattr(obj: Any, path: str) -> Any:
     return obj
 
 
+def resolve_namepath(np: NamePath) -> ResolvedNamePath:
+    mod = importlib.import_module(np.module)
+    val = dotted_getattr(mod, np.qualname)
+    return ResolvedNamePath(np, mod, val)
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _rnp: ResolvedNamePath
     _n: str
@@ -65,9 +71,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     # FIXME: Need weakref?
 
     def __init__(self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath) -> None:
-        mod = importlib.import_module(namepath.module)
-        val = dotted_getattr(mod, namepath.qualname)
-        self._rnp = ResolvedNamePath(namepath, mod, val)
+        self._rnp = resolve_namepath(namepath)
         self._f = func
 
     @overload
@@ -128,10 +132,6 @@ class TypeRewriter:
     @property
     def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
-
-    @property
-    def meth_info(self) -> AnnotatedMethodInfo:
-        return cast(AMI, None)
 
 
 if __name__ == "__main__":
