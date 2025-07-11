@@ -18,6 +18,7 @@ from typing import (
 if not TYPE_CHECKING:
     try:
         from rich import print
+        # pass
     except ImportError:
         pass
 
@@ -39,7 +40,7 @@ class AnnotatedMethodInfo(NamedTuple):
 
 
 AMI = AnnotatedMethodInfo
-AMIS = cast(AnnotatedMethodInfo, None)
+AMIS = cast(AnnotatedMethodInfo, object())
 
 
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
