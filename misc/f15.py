@@ -120,6 +120,8 @@ class TypeRewriter:
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
+        if not hasattr(self, "_infos"):
+            self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
     @rewriter("typing", "Union")
