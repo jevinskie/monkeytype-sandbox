@@ -10,7 +10,6 @@ from typing import (
     Generic,
     NamedTuple,
     ParamSpec,
-    Protocol,
     TypeVar,
     cast,
     overload,
@@ -41,15 +40,6 @@ class AnnotatedMethodInfo(NamedTuple):
 
 AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, None)
-
-
-class AnnotatedMethodFunctionCall(Protocol, Generic[_P, _R_co]):
-    @staticmethod
-    def __call__(meta: AnnotatedMethodInfo, *args: _P.args, **kwargs: _P.kwargs) -> _R_co: ...
-
-
-class AnnotatedMethodMethodCall(Protocol, Generic[_P, _R_co]):
-    def __call__(self, meta: AnnotatedMethodInfo, *args: _P.args, **kwargs: _P.kwargs) -> _R_co: ...
 
 
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
