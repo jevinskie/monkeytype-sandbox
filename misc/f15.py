@@ -90,17 +90,21 @@ class TypeRewriter:
 
     @rewriter("typing", "Union")
     def fancy(self, a: int, b: int) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} registry: {self.registry}")
+        print(f"fancy() self: {self} a: {a} b: {b} meth_info: {self.meth_info}")
         return a + b
 
     @rewriter("pycparser.c_ast", "Union")
     def mancy(self, a: int, b: int) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} registry: {self.registry}")
+        print(f"mancy() self: {self} a: {a} b: {b} meth_info: {self.meth_info}")
         return a * b
 
     @property
     def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
+
+    @property
+    def meth_info(self) -> AnnotatedMethodInfo:
+        return None
 
 
 if __name__ == "__main__":

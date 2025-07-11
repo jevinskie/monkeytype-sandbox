@@ -1,48 +1,35 @@
-import typing
+from __future__ import annotations
 
-P = typing.ParamSpec("P")
+import sys
 
-
-class Foo:
-    def regular_meth(self, a: int, b: int) -> int:
-        print(f"Foo.regular_meth self: {self} a: {a} b: {b}")
-        return a + b
-
-    @classmethod
-    def class_meth(cls, a: int, b: int) -> int:
-        print(f"Foo.class_meth cls: {cls} a: {a} b: {b}")
-        return a + b
-
-    @staticmethod
-    def static_meth(a: int, b: int) -> int:
-        print(f"Foo.static_meth a: {a} b: {b}")
-        return a + b
+from rich import print
 
 
-def _bar(cls: type, a: int, b: int) -> int:
-    print(f"_bar cls: {cls} a: {a} b: {b}")
-    return a + b
+class Calc:
+    # d: int
+
+    def add(self, a: int, b: int) -> int:
+        at = a + 0
+        ot = self.permeth()
+        return at + b + ot
+
+    def mul(self, a: int, b: int) -> int:
+        mt = self.permeth()
+        return a * b + mt
+
+    def permeth(self) -> int:
+        f = sys._getframe(1)
+        print(f)
+        print(f.f_globals)
+        print(f.f_locals)
+        return 10
 
 
-bar_raw: staticmethod[[type, int, int], int] = staticmethod(_bar)
-bar = typing.cast(staticmethod[[int, int], int], bar_raw)
-# bf_raw = functools.partial(bar.__func__, Foo)
-# bf = typing.cast(Callable[[int, int], int], bf_raw)
-print(bar.__wrapped__)
-# print(bar.__func__(Foo, 1000, 2000))
-print(bar_raw(Foo, 10_000, 20_000))
+if __name__ == "__main__":
 
-f = Foo()
-print(f)
-print(f.regular_meth(1, 2))
-print(f.class_meth(10, 20))
-print(f.static_meth(100, 200))
-print(type(f).static_meth(400, 500))
+    def f():
+        c = Calc()
+        print(c.add(1, 2))
+        print(c.mul(3, 7))
 
-if typing.TYPE_CHECKING:
-    typing.reveal_type(bar_raw)
-    typing.reveal_type(bar)
-    typing.reveal_type(bar.__wrapped__)
-    typing.reveal_type(bar.__func__)
-    # typing.reveal_type(bf_raw)
-    # typing.reveal_type(bf)
+    f()
