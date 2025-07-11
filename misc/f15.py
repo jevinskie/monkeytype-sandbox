@@ -41,6 +41,10 @@ class AnnotatedMethodInfo(NamedTuple):
     method: MethodType
 
 
+AMI = AnnotatedMethodInfo
+AMIS = cast(AnnotatedMethodInfo, None)
+
+
 class AnnotatedMethodFunctionCall(Protocol, Generic[_P, _R_co]):
     @staticmethod
     def __call__(meta: AnnotatedMethodInfo, *args: _P.args, **kwargs: _P.kwargs) -> _R_co: ...
@@ -64,6 +68,7 @@ class A:
     def d(self, x: int, *args: Any, i: int | None = None, **kwargs: Any) -> int: ...
     def e(self, x: int, *, i: int | None = None, **kwargs) -> int: ...
     def f(self, x: int, /, *, i: int | None = None, **kwargs) -> int: ...
+    def f2(self, x: int, /, i: int | None = None, **kwargs) -> int: ...
     def g(self, x: int, /, *args: Any, i: int | None = None, **kwargs) -> int: ...
     def h(self, x: int, /, *args: Any, i: int | None = None) -> int: ...
     def i(self, x: int, /, *args: Any) -> int: ...
@@ -83,6 +88,8 @@ if TYPE_CHECKING:
     reveal_type(a.e)
     reveal_type(A.f)
     reveal_type(a.f)
+    reveal_type(A.f2)
+    reveal_type(a.f2)
     # reveal_type(A.g)
     # reveal_type(a.g)
     # reveal_type(A.h)
@@ -146,13 +153,13 @@ class TypeRewriter:
         self._infos_ro = MappingProxyType(self._infos)
 
     @rewriter("typing", "Union")
-    def fancy(self, a: int, b: int) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} meth_info: {self.meth_info}")
+    def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a + b
 
     @rewriter("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} meth_info: {self.meth_info}")
+    def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a * b
 
     @property
@@ -161,7 +168,7 @@ class TypeRewriter:
 
     @property
     def meth_info(self) -> AnnotatedMethodInfo:
-        return None
+        return cast(AMI, None)
 
 
 if __name__ == "__main__":
