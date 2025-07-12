@@ -143,7 +143,7 @@ class TypeRewriter:
             self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
-    def _call_as_method(
+    def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
     ) -> Any:
         m = method_info.method.__get__(self, type(self))  # type: ignore
@@ -153,7 +153,7 @@ class TypeRewriter:
         rewriter = self.registry.get(namepath)
         print(f"rewriter: {rewriter}")
         if rewriter:
-            return cast(int, self._call_as_method(rewriter, a, b))
+            return cast(int, self._call_annotated_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
     @rewriter("typing", "Union")
