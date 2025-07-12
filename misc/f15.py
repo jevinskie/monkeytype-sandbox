@@ -147,14 +147,13 @@ class TypeRewriter:
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
     ) -> Any:
         m = method_info.method.__get__(self, type(self))  # type: ignore
-        print(f"args: {args} kwargs: {kwargs}")
         return m(*args, **kwargs)
 
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
         rewriter = self.registry.get(namepath)
         print(f"rewriter: {rewriter}")
         if rewriter:
-            return cast(int, self._call_as_method(rewriter, 1, 2))
+            return cast(int, self._call_as_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
     @rewriter("typing", "Union")
