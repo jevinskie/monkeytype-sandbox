@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 from collections.abc import Callable
 from functools import partial
-from types import MappingProxyType, MethodType, ModuleType
+from types import FunctionType, MappingProxyType, MethodType, ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -22,6 +22,17 @@ if not TYPE_CHECKING:
         # pass
     except ImportError:
         pass
+    try:
+        from rich import inspect as rinspect
+    except ImportError:
+
+        def rinspect(*args: Any, **kwargs: Any) -> None:
+            print(*args)
+
+else:
+
+    def rinspect(*args: Any, **kwargs: Any) -> None: ...
+
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -132,10 +143,16 @@ class TypeRewriter:
             self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
-    def rewrite_type(self, namepath: NamePath, a: int, b: int) -> None:
+    def _call_as_method(self, method: FunctionType, *args: Any, **kwargs: Any) -> Any:
+        print(
+            f"_call_as_method self: {self} method: {method} type(method): {type(method)} args: {args} kwargs: {kwargs}"
+        )
+        rinspect(method)
+
+    def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
         rewriter = self.registry.get(namepath)
         print(f"rewriter: {rewriter}")
-        return rewriter(self, 1, 2)
+        return self._call_as_method(cast(FunctionType, rewriter), 1, 2)
 
     @rewriter("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
