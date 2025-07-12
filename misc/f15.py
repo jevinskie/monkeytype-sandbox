@@ -132,6 +132,11 @@ class TypeRewriter:
             self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
+    def rewrite_type(self, namepath: NamePath, a: int, b: int) -> None:
+        rewriter = self.registry.get(namepath)
+        print(f"rewriter: {rewriter}")
+        return rewriter(self, 1, 2)
+
     @rewriter("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
@@ -151,3 +156,9 @@ if __name__ == "__main__":
     tr = TypeRewriter()
     print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
     print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
+    print("rw_ty typing.Union:")
+    np_t = NamePath("typing", "Union")
+    np_c = NamePath("pycparser.c_ast", "Union")
+    print(tr.rewrite_type(np_t, 10, 20))
+    print("rw_ty typing.Union:")
+    print(tr.rewrite_type(np_c, 100, 200))
