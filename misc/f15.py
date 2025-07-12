@@ -210,11 +210,15 @@ if __name__ == "__main__":
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
 
+    print("\n" * 3)
+
     tr = TypeRewriter()
     print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
     print(f"TypeRewriter.mancy(tr, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
     print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
+
+    print("\n" * 7)
 
     dtr = DerivedTypeRewriter()
     print(f"dtr.fancy(1, 2): {dtr.fancy(1, 2)}")
