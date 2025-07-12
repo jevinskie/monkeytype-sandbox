@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 from collections.abc import Callable
 from functools import partial
-from types import FunctionType, MappingProxyType, MethodType, ModuleType
+from types import MappingProxyType, MethodType, ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -143,16 +143,19 @@ class TypeRewriter:
             self._infos = {}
         self._infos_ro = MappingProxyType(self._infos)
 
-    def _call_as_method(self, method: FunctionType, *args: Any, **kwargs: Any) -> Any:
-        print(
-            f"_call_as_method self: {self} method: {method} type(method): {type(method)} args: {args} kwargs: {kwargs}"
-        )
-        rinspect(method)
+    def _call_as_method(
+        self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
+    ) -> Any:
+        m = method_info.method.__get__(self, type(self))  # type: ignore
+        print(f"args: {args} kwargs: {kwargs}")
+        return m(*args, **kwargs)
 
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
         rewriter = self.registry.get(namepath)
         print(f"rewriter: {rewriter}")
-        return self._call_as_method(cast(FunctionType, rewriter), 1, 2)
+        if rewriter:
+            return cast(int, self._call_as_method(rewriter, 1, 2))
+        raise KeyError(f"couldn't get key for namepath: {namepath}")
 
     @rewriter("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
@@ -173,9 +176,9 @@ if __name__ == "__main__":
     tr = TypeRewriter()
     print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
     print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
-    print("rw_ty typing.Union:")
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
-    print(tr.rewrite_type(np_t, 10, 20))
-    print("rw_ty typing.Union:")
-    print(tr.rewrite_type(np_c, 100, 200))
+    print(f"np_t: {np_t}")
+    print(f"np_c: {np_c}")
+    print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
+    print(f"rw_ty typing.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
