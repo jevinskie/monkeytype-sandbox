@@ -186,13 +186,13 @@ class TypeRewriter(GenericTypeRewriter):
 
 class DerivedTypeRewriter(TypeRewriter):
     @rewriter_dec("typing", "Union")
-    def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+    def der_rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union")
-    def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta}")
+    def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
         return a * b
 
 
