@@ -163,36 +163,44 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
     @rewriter_dec("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
+        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union")
     def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
+        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}")
         return a * b
 
 
 class TypeRewriter(GenericTypeRewriter):
     @rewriter_dec("typing", "Union")
     def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        print(
+            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+        )
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union")
     def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        print(
+            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+        )
         return a * b
 
 
 class DerivedTypeRewriter(TypeRewriter):
     @rewriter_dec("typing", "Union")
     def der_rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        print(
+            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+        )
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union")
     def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        print(
+            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+        )
         return a * b
 
 
