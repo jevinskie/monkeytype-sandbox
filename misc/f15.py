@@ -199,7 +199,7 @@ class DerivedTypeRewriter(TypeRewriter):
     @rewriter_dec("pycparser.c_ast", "Union")
     def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(
-            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+            f"DR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
         )
         return a * b
 
