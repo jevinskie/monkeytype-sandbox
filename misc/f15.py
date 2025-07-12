@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+from abc import ABC
 from collections.abc import Callable
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
@@ -124,7 +125,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return AnnotatedMethodInfo(self._rnp, self._n, cast(MethodType, self))
 
 
-class rewriter:
+class rewriter_dec:
     _np: NamePath
 
     def __init__(self, module: str, qualname: str) -> None:
@@ -134,7 +135,7 @@ class rewriter:
         return cast(_F, AnnotatedMethod(func, self._np))
 
 
-class TypeRewriter:
+class GenericTypeRewriter(Generic[_T], ABC):
     _infos: dict[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
@@ -149,6 +150,10 @@ class TypeRewriter:
         m = method_info.method.__get__(self, type(self))  # type: ignore
         return m(*args, **kwargs)
 
+    @property
+    def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
+        return self._infos_ro
+
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
         rewriter = self.registry.get(namepath)
         print(f"rewriter: {rewriter}")
@@ -156,28 +161,55 @@ class TypeRewriter:
             return cast(int, self._call_annotated_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a + b
 
-    @rewriter("pycparser.c_ast", "Union")
+    @rewriter_dec("pycparser.c_ast", "Union")
     def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a * b
 
-    @property
-    def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
-        return self._infos_ro
+
+class TypeRewriter(GenericTypeRewriter):
+    @rewriter_dec("typing", "Union")
+    def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        return a + b
+
+    @rewriter_dec("pycparser.c_ast", "Union")
+    def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        return a * b
+
+
+class DerivedTypeRewriter(TypeRewriter):
+    @rewriter_dec("typing", "Union")
+    def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"DR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        return a + b
+
+    @rewriter_dec("pycparser.c_ast", "Union")
+    def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"DR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta}")
+        return a * b
 
 
 if __name__ == "__main__":
-    tr = TypeRewriter()
-    print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
-    print(f"TypeRewriter.mancy(b, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
+
+    tr = TypeRewriter()
+    print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
+    print(f"TypeRewriter.mancy(tr, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
-    print(f"rw_ty typing.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
+    print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
+
+    dtr = DerivedTypeRewriter()
+    print(f"dtr.fancy(1, 2): {dtr.fancy(1, 2)}")
+    print(f"DerivedTypeRewriter.mancy(dtr, 7, 11): {DerivedTypeRewriter.mancy(dtr, 7, 11)}")
+    print(f"rw_dty typing.Union: 10, 20: {dtr.rewrite_type(np_t, 10, 20)}")
+    print(f"rw_dty c_ast.Union: 100, 200: {dtr.rewrite_type(np_c, 100, 200)}")
