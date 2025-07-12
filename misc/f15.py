@@ -214,14 +214,20 @@ if __name__ == "__main__":
 
     tr = TypeRewriter()
     print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
+    print("\n" * 1)
     print(f"TypeRewriter.mancy(tr, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
+    print("\n" * 1)
     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
+    print("\n" * 1)
     print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
 
     print("\n" * 7)
 
     dtr = DerivedTypeRewriter()
     print(f"dtr.fancy(1, 2): {dtr.fancy(1, 2)}")
+    print("\n" * 1)
     print(f"DerivedTypeRewriter.mancy(dtr, 7, 11): {DerivedTypeRewriter.mancy(dtr, 7, 11)}")
+    print("\n" * 1)
     print(f"rw_dty typing.Union: 10, 20: {dtr.rewrite_type(np_t, 10, 20)}")
+    print("\n" * 1)
     print(f"rw_dty c_ast.Union: 100, 200: {dtr.rewrite_type(np_c, 100, 200)}")
