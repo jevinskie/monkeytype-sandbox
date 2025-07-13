@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import importlib
-import itertools
 from abc import ABC
-from collections import UserList
-from collections.abc import Callable, Mapping, MutableMapping
+from collections.abc import Callable
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
 from typing import (
@@ -37,91 +35,12 @@ else:
     def rinspect(*args: Any, **kwargs: Any) -> None: ...
 
 
+from dictstack import DictStack
+
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
-
-
-class DictStack(MutableMapping, UserList):
-    """
-    A stack of dictionaries that behaves as a view on those dictionaries,
-    giving preference to the last.
-
-    >>> stack = DictStack([dict(a=1, c=2), dict(b=2, a=2)])
-    >>> stack['a']
-    2
-    >>> stack['b']
-    2
-    >>> stack['c']
-    2
-    >>> len(stack)
-    3
-    >>> dict(stack)
-    {'a': 2, 'c': 2, 'b': 2}
-    >>> list(stack)
-    ['a', 'c', 'b']
-    >>> stack.dicts
-    [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}]
-    >>> stack.push(dict(a=3))
-    >>> stack['a']
-    3
-    >>> stack['a'] = 4
-    >>> set(stack.keys()) == set(['a', 'b', 'c'])
-    True
-    >>> set(stack.items()) == set([('a', 4), ('b', 2), ('c', 2)])
-    True
-    >>> dict(**stack) == dict(stack) == dict(a=4, c=2, b=2)
-    True
-    >>> d = stack.pop()
-    >>> stack['a']
-    2
-    >>> d = stack.pop()
-    >>> stack['a']
-    1
-    >>> stack.get('b', None)
-    >>> 'c' in stack
-    True
-    >>> del stack['c']
-    >>> dict(stack)
-    {'a': 1}
-    """
-
-    @property
-    def dicts(self):
-        return self.data
-
-    def __iter__(self):
-        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.data)))
-
-    def __getitem__(self, key):
-        for scope in reversed(tuple(self.data)):
-            if key in scope:
-                return scope[key]
-        raise KeyError(key)
-
-    push = UserList.append
-
-    def __contains__(self, other) -> bool:
-        return Mapping.__contains__(self, other)
-
-    def __len__(self) -> int:
-        return len(list(iter(self)))
-
-    def __setitem__(self, key, item):
-        last_dict = self.data[-1]
-        return last_dict.__setitem__(key, item)
-
-    def __delitem__(self, key):
-        last_dict = self.data[-1]
-        return last_dict.__delitem__(key)
-
-    # workaround for mypy confusion
-    def pop(self, *args, **kwargs):
-        return self.data.pop(*args, **kwargs)
-
-
-MutableMapping.register(DictStack)
 
 
 class NamePath(NamedTuple):
@@ -220,7 +139,7 @@ class rewriter_dec:
 
 class GenericTypeRewriter(Generic[_T], ABC):
     # _infos: dict[NamePath, AnnotatedMethodInfo]
-    _infos: DictStack
+    _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
