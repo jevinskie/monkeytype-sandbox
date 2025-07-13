@@ -41,6 +41,10 @@ class DictStack(MutableMapping[_KT, _VT]):
     >>> stack['a']
     3
     >>> stack['a'] = 4
+    >>> stack.dicts
+    [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}, {'a': 4}]
+    >>> dict(stack)
+    {'a': 4, 'c': 2, 'b': 2}
     >>> set(stack.keys()) == set(['a', 'b', 'c'])
     True
     >>> set(stack.items()) == set([('a', 4), ('b', 2), ('c', 2)])

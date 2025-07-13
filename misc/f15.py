@@ -18,6 +18,9 @@ from typing import (
     overload,
 )
 
+import pdbp
+from dictstack import DictStack
+
 if not TYPE_CHECKING:
     try:
         from rich import print
@@ -36,7 +39,8 @@ else:
     def rinspect(*args: Any, **kwargs: Any) -> None: ...
 
 
-from dictstack import DictStack
+pdbp  # keep import alive when set_trace() calls are commented out
+
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -153,14 +157,32 @@ class GenericTypeRewriter(Generic[_T], ABC):
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
+        # pdbp.set_trace()
         if not hasattr(self, "_infos"):
             self._infos = DictStack([{}])
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
+        # pdbp.set_trace()
+        print(f"_is_() cls init: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        print("_is_() cls init: dicts:")
+        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        print(f"init dicts *: {dict_id_str}")
+        print(cls._infos.dicts)
+        print()
         super().__init_subclass__()
+        print(f"_is_() cls midl: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        print(f"midl dicts *: {dict_id_str}")
+        print(cls._infos.dicts)
+        print()
         cls._infos = copy(cls._infos)
         cls._infos.pushdict()
+        print(f"_is_() cls post: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        print(f"post dicts *: {dict_id_str}")
+        print(cls._infos.dicts)
+        print()
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
