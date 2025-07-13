@@ -68,7 +68,6 @@ class DictStack(MutableMapping[_KT, _VT]):
     _dicts: list[MutableMapping[_KT, _VT]]
 
     def __init__(self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None) -> None:
-        super().__init__()
         self._dicts = list(dicts) if dicts is not None else []
 
     @property
