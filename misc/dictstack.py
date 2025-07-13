@@ -87,4 +87,4 @@ class DictStack(UserList, MutableMapping):
         return self.data.pop(*args, **kwargs)
 
 
-MutableMapping.register(DictStack)
+MutableMapping.register(DictStack)  # type: ignore
