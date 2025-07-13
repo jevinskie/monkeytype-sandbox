@@ -25,6 +25,10 @@ class DictStack(UserList, MutableMapping):
     2
     >>> len(stack)
     3
+    >>> list(stack)
+    ['a', 'c', 'b']
+    >>> stack.dicts
+    [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}]
     >>> stack.push(dict(a=3))
     >>> stack['a']
     3
@@ -48,6 +52,10 @@ class DictStack(UserList, MutableMapping):
     >>> dict(stack)
     {'a': 1}
     """
+
+    @property
+    def dicts(self):
+        return self.data
 
     def __iter__(self):
         dicts = list.__iter__(self.data)
