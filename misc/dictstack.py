@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable, Iterator, MutableMapping
+from types import MappingProxyType
 from typing import TypeVar
 
 _KT = TypeVar("_KT")
@@ -33,9 +34,10 @@ class DictStack(MutableMapping[_KT, _VT]):
     [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}, {'a': 3}]
     >>> dict(stack)
     {'a': 3, 'c': 2, 'b': 2}
-    >>> import types
-    >>> dict(types.MappingProxyType(stack))
+    >>> dict(stack.mapping)
     {'a': 3, 'c': 2, 'b': 2}
+    >>> isinstance(stack.mapping, MappingProxyType)
+    True
     >>> stack['a']
     3
     >>> stack['a'] = 4
@@ -72,6 +74,10 @@ class DictStack(MutableMapping[_KT, _VT]):
     @property
     def dicts(self) -> list[MutableMapping[_KT, _VT]]:
         return self._dicts
+
+    @property
+    def mapping(self) -> MappingProxyType[_KT, _VT]:
+        return MappingProxyType(self)
 
     def __iter__(self) -> Iterator[_KT]:
         return iter(dict.fromkeys(itertools.chain.from_iterable(self._dicts)))
