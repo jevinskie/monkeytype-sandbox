@@ -1,18 +1,16 @@
-import itertools
-from collections import UserList
-from collections.abc import Iterator, Mapping, MutableMapping
-from typing import Any, TypeVar, cast
+from __future__ import annotations
 
-_T = TypeVar("_T")
+import itertools
+from collections.abc import Iterable, Iterator, MutableMapping
+from typing import TypeVar
+
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
-_KTP = TypeVar("_KTP")
-_VTP = TypeVar("_VTP")
 
 
 # https://github.com/jaraco/jaraco.collections
 # MIT licensed
-class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
+class DictStack(MutableMapping[_KT, _VT]):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -30,7 +28,7 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     ['a', 'c', 'b']
     >>> stack.dicts
     [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}]
-    >>> stack.push(dict(a=3))
+    >>> stack.pushdict(dict(a=3))
     >>> stack['a']
     3
     >>> stack['a'] = 4
@@ -40,12 +38,12 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     True
     >>> dict(**stack) == dict(stack) == dict(a=4, c=2, b=2)
     True
-    >>> d = stack.pop()
+    >>> d = stack.popdict()
     >>> stack['a']
     2
     >>> d
     {'a': 4}
-    >>> d = stack.pop()
+    >>> d = stack.popdict()
     >>> stack['a']
     1
     >>> d
@@ -58,47 +56,44 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     {'a': 1}
     """
 
+    _dicts: list[MutableMapping[_KT, _VT]]
+
+    def __init__(self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None) -> None:
+        super().__init__()
+        self._dicts = list(dicts) if dicts is not None else []
+
     @property
     def dicts(self) -> list[MutableMapping[_KT, _VT]]:
-        return cast(list[MutableMapping[_KT, _VT]], self.data)
+        return self._dicts
 
     def __iter__(self) -> Iterator[_KT]:
-        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.dicts)))
+        return iter(dict.fromkeys(itertools.chain.from_iterable(self._dicts)))
 
     def __getitem__(self, key: _KT) -> _VT:
-        for scope in reversed(tuple(self.dicts)):
+        if not self._dicts:
+            raise IndexError("DictStack stack is empty")
+        for scope in reversed(self._dicts):
             if key in scope:
                 return scope[key]
         raise KeyError(key)
 
-    push = UserList.append
+    def pushdict(self, pushed_dict: MutableMapping[_KT, _VT]) -> None:
+        return self._dicts.append(pushed_dict)
 
-    def __contains__(self, other) -> bool:
-        return Mapping.__contains__(self, other)
+    def popdict(self, index: int = -1) -> MutableMapping[_KT, _VT]:
+        if not self._dicts:
+            raise IndexError("DictStack stack is empty")
+        return self._dicts.pop(index)
 
     def __len__(self) -> int:
         return len(list(iter(self)))
 
     def __setitem__(self, key: _KT, item: _VT) -> None:
-        last_dict = self.dicts[-1]
-        return last_dict.__setitem__(key, item)
+        if not self._dicts:
+            raise IndexError("DictStack stack is empty")
+        self._dicts[-1][key] = item
 
     def __delitem__(self, key: _KT) -> None:
-        last_dict = self.dicts[-1]
-        return last_dict.__delitem__(key)
-
-    # @overload
-    # def pop(self, key: _KT, /) -> _VT:
-    #     assert_never(cast(Never, None))
-    # @overload
-    # def pop(self, key: _KT, /, default: _VT) -> _VT: ...
-    # @overload
-    # def pop(self, _KT, /, default: _T) -> _VT | _T: ...
-    # workaround for mypy confusion
-    # def pop(self, index: int = 0) -> MutableMapping[_KT, _VT]:
-    #     return self.dicts.pop(index)
-    def pop(self, *args: Any, **kwargs: Any) -> MutableMapping[_KT, _VT]:
-        return self.dicts.pop(*args, **kwargs)
-
-
-MutableMapping.register(DictStack)  # type: ignore
+        if not self._dicts:
+            raise IndexError("DictStack stack is empty")
+        del self._dicts[-1][key]
