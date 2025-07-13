@@ -109,3 +109,6 @@ class DictStack(MutableMapping[_KT, _VT]):
         if not self._dicts:
             raise IndexError("DictStack stack is empty")
         del self._dicts[-1][key]
+
+    def __copy__(self) -> DictStack[_KT, _VT]:
+        return DictStack(list(self._dicts))

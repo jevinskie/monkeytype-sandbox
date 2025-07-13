@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 from abc import ABC
 from collections.abc import Callable
+from copy import copy
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
 from typing import (
@@ -141,7 +142,6 @@ class rewriter_dec:
     _etc: dict[Any, Any] | None
 
     def __init__(self, module: str, qualname: str, /, etc: dict[Any, Any] | None = None) -> None:
-        print(f"RD.__init__() self: {self} mod: {module} qn: {qualname} etc: {etc}")
         self._np = NamePath(module, qualname)
         self._etc = etc
 
@@ -154,14 +154,14 @@ class GenericTypeRewriter(Generic[_T], ABC):
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
-        print(f"GTR.__init__() self: {self}")
         if not hasattr(self, "_infos"):
             self._infos = DictStack([{}])
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
-        print(f"GTR.__init_subclass__() cls: {cls}")
-        return super().__init_subclass__()
+        super().__init_subclass__()
+        cls._infos = copy(cls._infos)
+        cls._infos.pushdict()
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
@@ -182,18 +182,14 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
 
 class TypeRewriter(GenericTypeRewriter):
-    def __init__(self) -> None:
-        print(f"TR.__init__() self: {self}")
-        super().__init__()
-        print(f"TR.__init__() post-super self: {self}")
-
     @rewriter_dec("typing", "Union", etc={"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
+            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
         )
+        print(f"TR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "TR.rewrite_c_ast_Union"})
@@ -201,24 +197,21 @@ class TypeRewriter(GenericTypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
+            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
         )
+        print(f"TR.cast.meta: {meta}\n")
         return a * b
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    def __init__(self) -> None:
-        print(f"DTR.__init__() self: {self}")
-        super().__init__()
-        print(f"DTR.__init__() post-super self: {self}")
-
     @rewriter_dec("typing", "Union", etc={"name": "DTR.der_rewrite_typing_Union"})
     def der_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
+            f"DTR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
         )
+        print(f"DTR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "DTR.der_rewrite_c_ast_Union"})
@@ -226,8 +219,9 @@ class DerivedTypeRewriter(TypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"DR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
+            f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
         )
+        print(f"DTR.cast.meta: {meta}\n")
         return a * b
 
 
