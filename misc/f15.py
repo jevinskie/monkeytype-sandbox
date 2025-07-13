@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import itertools
 from abc import ABC
+from collections import UserList
 from collections.abc import Callable, Mapping, MutableMapping
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
@@ -42,7 +43,7 @@ _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
-class DictStack(list, MutableMapping):
+class DictStack(UserList, MutableMapping):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -56,6 +57,10 @@ class DictStack(list, MutableMapping):
     2
     >>> len(stack)
     3
+    >>> dict(stack)
+    {'a': 2, 'b': 2, 'c': 2}
+    >>> list(stack)
+    [{'a': 2, 'c': 2}, {'b': 2, 'a': 2}]
     >>> stack.push(dict(a=3))
     >>> stack['a']
     3
@@ -81,16 +86,16 @@ class DictStack(list, MutableMapping):
     """
 
     def __iter__(self):
-        dicts = list.__iter__(self)
+        dicts = list.__iter__(self.data)
         return iter(set(itertools.chain.from_iterable(c.keys() for c in dicts)))
 
     def __getitem__(self, key):
-        for scope in reversed(tuple(list.__iter__(self))):
+        for scope in reversed(tuple(list.__iter__(self.data))):
             if key in scope:
                 return scope[key]
         raise KeyError(key)
 
-    push = list.append
+    push = UserList.append
 
     def __contains__(self, other):
         return Mapping.__contains__(self, other)
@@ -99,16 +104,16 @@ class DictStack(list, MutableMapping):
         return len(list(iter(self)))
 
     def __setitem__(self, key, item):
-        last = list.__getitem__(self, -1)
+        last = list.__getitem__(self.data, -1)
         return last.__setitem__(key, item)
 
     def __delitem__(self, key):
-        last = list.__getitem__(self, -1)
+        last = list.__getitem__(self.data, -1)
         return last.__delitem__(key)
 
     # workaround for mypy confusion
     def pop(self, *args, **kwargs):
-        return list.pop(self, *args, **kwargs)
+        return list.pop(self.data, *args, **kwargs)
 
 
 MutableMapping.register(DictStack)
