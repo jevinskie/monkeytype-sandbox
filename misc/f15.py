@@ -101,7 +101,6 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         namepath: NamePath,
         etc: dict[Any, Any] | None = None,
     ) -> None:
-        print(f"AM.__init__() self: {self} np: {namepath} etc: {etc} f: {func}")
         self._rnp = resolve_namepath(namepath)
         self._f = func
         self._etc = etc if etc is not None else {}
