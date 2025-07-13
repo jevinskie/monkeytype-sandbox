@@ -84,8 +84,8 @@ class DictStack(MutableMapping[_KT, _VT]):
                 return scope[key]
         raise KeyError(key)
 
-    def pushdict(self, pushed_dict: MutableMapping[_KT, _VT]) -> None:
-        return self._dicts.append(pushed_dict)
+    def pushdict(self, pushed_dict: MutableMapping[_KT, _VT] | None = None) -> None:
+        return self._dicts.append(pushed_dict if pushed_dict is not None else {})
 
     def popdict(self, index: int = -1) -> MutableMapping[_KT, _VT]:
         if not self._dicts:
