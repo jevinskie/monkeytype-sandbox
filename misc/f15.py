@@ -144,7 +144,7 @@ class GenericTypeRewriter(Generic[_T], ABC):
     def __init__(self) -> None:
         if not hasattr(self, "_infos"):
             self._infos = DictStack([{}])
-        self._infos_ro = MappingProxyType(self._infos)
+        self._infos_ro = self._infos.mapping
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
