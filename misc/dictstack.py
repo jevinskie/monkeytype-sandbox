@@ -78,3 +78,6 @@ class DictStack(UserList, MutableMapping):
     # workaround for mypy confusion
     def pop(self, *args, **kwargs):
         return list.pop(self.data, *args, **kwargs)
+
+
+MutableMapping.register(dict)
