@@ -1,17 +1,15 @@
 import itertools
 from collections import UserList
-from collections.abc import Callable, Mapping, MutableMapping
-from typing import Any, ParamSpec, TypeVar
+from collections.abc import Mapping, MutableMapping
+from typing import TypeVar, cast
 
-_T = TypeVar("_T")
-_F = TypeVar("_F", bound=Callable[..., Any])
-_P = ParamSpec("_P")
-_R_co = TypeVar("_R_co", covariant=True)
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
 
 
 # https://github.com/jaraco/jaraco.collections
 # MIT licensed
-class DictStack(UserList, MutableMapping):
+class DictStack(UserList[_KT], MutableMapping[_KT, _VT]):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -42,9 +40,13 @@ class DictStack(UserList, MutableMapping):
     >>> d = stack.pop()
     >>> stack['a']
     2
+    >>> d
+    {'a': 4}
     >>> d = stack.pop()
     >>> stack['a']
     1
+    >>> d
+    {'b': 2, 'a': 2}
     >>> stack.get('b', None)
     >>> 'c' in stack
     True
@@ -54,14 +56,14 @@ class DictStack(UserList, MutableMapping):
     """
 
     @property
-    def dicts(self):
-        return self.data
+    def dicts(self) -> list[MutableMapping[_KT, _VT]]:
+        return cast(list[MutableMapping[_KT, _VT]], self.data)
 
     def __iter__(self):
-        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.data)))
+        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.dicts)))
 
     def __getitem__(self, key):
-        for scope in reversed(tuple(self.data)):
+        for scope in reversed(tuple(self.dicts)):
             if key in scope:
                 return scope[key]
         raise KeyError(key)
@@ -75,16 +77,16 @@ class DictStack(UserList, MutableMapping):
         return len(list(iter(self)))
 
     def __setitem__(self, key, item):
-        last_dict = self.data[-1]
+        last_dict = self.dicts[-1]
         return last_dict.__setitem__(key, item)
 
     def __delitem__(self, key):
-        last_dict = self.data[-1]
+        last_dict = self.dicts[-1]
         return last_dict.__delitem__(key)
 
     # workaround for mypy confusion
-    def pop(self, *args, **kwargs):
-        return self.data.pop(*args, **kwargs)
+    def pop(self, *args, **kwargs) -> MutableMapping[_KT, _VT]:
+        return self.dicts.pop(*args, **kwargs)
 
 
 MutableMapping.register(DictStack)  # type: ignore
