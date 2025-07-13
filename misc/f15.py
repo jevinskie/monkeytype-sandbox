@@ -58,6 +58,7 @@ class AnnotatedMethodInfo(NamedTuple):
     resolved: ResolvedNamePath
     name: str
     method: MethodType
+    etc: dict[Any, Any]
 
 
 AMI = AnnotatedMethodInfo
@@ -89,12 +90,19 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _n: str
     _f: Callable[Concatenate[_T, _P], _R_co]
     _fmeta: Callable[Concatenate[_T, _P], _R_co]
+    _etc: dict[Any, Any]
 
     # FIXME: Need weakref?
 
-    def __init__(self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath) -> None:
+    def __init__(
+        self,
+        func: Callable[Concatenate[_T, _P], _R_co],
+        namepath: NamePath,
+        etc: dict[Any, Any] | None = None,
+    ) -> None:
         self._rnp = resolve_namepath(namepath)
         self._f = func
+        self._etc = etc if etc is not None else {}
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -120,21 +128,23 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
-        p = partial(self._f, meta=nt)  # type: ignore
+        p = partial(self._f, meta=nt, etc=self._etc)  # type: ignore
         self._fmeta = cast(Callable[Concatenate[_T, _P], _R_co], p)
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
-        return AnnotatedMethodInfo(self._rnp, self._n, cast(MethodType, self))
+        return AnnotatedMethodInfo(self._rnp, self._n, cast(MethodType, self), self._etc)
 
 
 class rewriter_dec:
     _np: NamePath
+    _etc: dict[Any, Any] | None
 
-    def __init__(self, module: str, qualname: str) -> None:
+    def __init__(self, module: str, qualname: str, /, etc: dict[Any, Any] | None = None) -> None:
         self._np = NamePath(module, qualname)
+        self._etc = etc
 
     def __call__(self, func: _F) -> _F:
-        return cast(_F, AnnotatedMethod(func, self._np))
+        return cast(_F, AnnotatedMethod(func, self._np, etc=self._etc))
 
 
 class GenericTypeRewriter(Generic[_T], ABC):
@@ -163,45 +173,43 @@ class GenericTypeRewriter(Generic[_T], ABC):
             return cast(int, self._call_annotated_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
-    @rewriter_dec("typing", "Union")
-    def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}")
-        return a + b
-
-    @rewriter_dec("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}")
-        return a * b
-
 
 class TypeRewriter(GenericTypeRewriter):
-    @rewriter_dec("typing", "Union")
-    def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+    @rewriter_dec("typing", "Union", etc={"name": "TR.rewrite_typing_Union"})
+    def rewrite_typing_Union(
+        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
+    ) -> int:
         print(
-            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
         )
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union")
-    def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+    @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "TR.rewrite_c_ast_Union"})
+    def rewrite_c_ast_Union(
+        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
+    ) -> int:
         print(
-            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
         )
         return a * b
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union")
-    def der_rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+    @rewriter_dec("typing", "Union", etc={"name": "DTR.der_rewrite_typing_Union"})
+    def der_rewrite_typing_Union(
+        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
+    ) -> int:
         print(
-            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+            f"DR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
         )
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union")
-    def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+    @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "DTR.der_rewrite_c_ast_Union"})
+    def der_rewrite_c_ast_Union(
+        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
+    ) -> int:
         print(
-            f"DR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} meta: {meta} id(m): {id(meta):#010x}"
+            f"DR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} meta: {meta} id(m): {id(meta):#010x}"
         )
         return a * b
 
@@ -215,10 +223,6 @@ if __name__ == "__main__":
     print("\n" * 3)
 
     tr = TypeRewriter()
-    print(f"tr.fancy(1, 2): {tr.fancy(1, 2)}")
-    print("\n" * 1)
-    print(f"TypeRewriter.mancy(tr, 7, 11): {TypeRewriter.mancy(tr, 7, 11)}")
-    print("\n" * 1)
     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
     print("\n" * 1)
     print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100, 200)}")
@@ -226,10 +230,6 @@ if __name__ == "__main__":
     print("\n" * 7)
 
     dtr = DerivedTypeRewriter()
-    print(f"dtr.fancy(1, 2): {dtr.fancy(1, 2)}")
-    print("\n" * 1)
-    print(f"DerivedTypeRewriter.mancy(dtr, 7, 11): {DerivedTypeRewriter.mancy(dtr, 7, 11)}")
-    print("\n" * 1)
     print(f"rw_dty typing.Union: 10, 20: {dtr.rewrite_type(np_t, 10, 20)}")
     print("\n" * 1)
     print(f"rw_dty c_ast.Union: 100, 200: {dtr.rewrite_type(np_c, 100, 200)}")
