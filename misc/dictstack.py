@@ -9,7 +9,7 @@ _VT = TypeVar("_VT")
 
 
 # https://github.com/jaraco/jaraco.collections
-# MIT licensed
+# MIT licensed Copyright 2025 Jason R. Coombs
 class DictStack(MutableMapping[_KT, _VT]):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
@@ -29,6 +29,13 @@ class DictStack(MutableMapping[_KT, _VT]):
     >>> stack.dicts
     [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}]
     >>> stack.pushdict(dict(a=3))
+    >>> stack.dicts
+    [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}, {'a': 3}]
+    >>> dict(stack)
+    {'a': 3, 'c': 2, 'b': 2}
+    >>> import types
+    >>> dict(types.MappingProxyType(stack))
+    {'a': 3, 'c': 2, 'b': 2}
     >>> stack['a']
     3
     >>> stack['a'] = 4
