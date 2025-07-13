@@ -1,6 +1,12 @@
 import itertools
 from collections import UserList
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
+from typing import Any, ParamSpec, TypeVar
+
+_T = TypeVar("_T")
+_F = TypeVar("_F", bound=Callable[..., Any])
+_P = ParamSpec("_P")
+_R_co = TypeVar("_R_co", covariant=True)
 
 
 # https://github.com/jaraco/jaraco.collections
