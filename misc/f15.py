@@ -100,6 +100,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         namepath: NamePath,
         etc: dict[Any, Any] | None = None,
     ) -> None:
+        print(f"AM.__init__() self: {self} np: {namepath} etc: {etc} f: {func}")
         self._rnp = resolve_namepath(namepath)
         self._f = func
         self._etc = etc if etc is not None else {}
@@ -140,6 +141,7 @@ class rewriter_dec:
     _etc: dict[Any, Any] | None
 
     def __init__(self, module: str, qualname: str, /, etc: dict[Any, Any] | None = None) -> None:
+        print(f"RD.__init__() self: {self} mod: {module} qn: {qualname} etc: {etc}")
         self._np = NamePath(module, qualname)
         self._etc = etc
 
@@ -152,9 +154,14 @@ class GenericTypeRewriter(Generic[_T], ABC):
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
+        print(f"GTR.__init__() self: {self}")
         if not hasattr(self, "_infos"):
             self._infos = DictStack([{}])
         self._infos_ro = self._infos.mapping
+
+    def __init_subclass__(cls) -> None:
+        print(f"GTR.__init_subclass__() cls: {cls}")
+        return super().__init_subclass__()
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
@@ -175,6 +182,11 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
 
 class TypeRewriter(GenericTypeRewriter):
+    def __init__(self) -> None:
+        print(f"TR.__init__() self: {self}")
+        super().__init__()
+        print(f"TR.__init__() post-super self: {self}")
+
     @rewriter_dec("typing", "Union", etc={"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
@@ -195,6 +207,11 @@ class TypeRewriter(GenericTypeRewriter):
 
 
 class DerivedTypeRewriter(TypeRewriter):
+    def __init__(self) -> None:
+        print(f"DTR.__init__() self: {self}")
+        super().__init__()
+        print(f"DTR.__init__() post-super self: {self}")
+
     @rewriter_dec("typing", "Union", etc={"name": "DTR.der_rewrite_typing_Union"})
     def der_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
