@@ -43,7 +43,7 @@ _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
-class DictStack(UserList, MutableMapping):
+class DictStack(MutableMapping, UserList):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -97,10 +97,10 @@ class DictStack(UserList, MutableMapping):
 
     push = UserList.append
 
-    def __contains__(self, other):
+    def __contains__(self, other) -> bool:
         return Mapping.__contains__(self, other)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(list(iter(self)))
 
     def __setitem__(self, key, item):
