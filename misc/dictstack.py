@@ -58,11 +58,10 @@ class DictStack(UserList, MutableMapping):
         return self.data
 
     def __iter__(self):
-        dicts = list.__iter__(self.data)
-        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in dicts)))
+        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.data)))
 
     def __getitem__(self, key):
-        for scope in reversed(tuple(list.__iter__(self.data))):
+        for scope in reversed(tuple(self.data)):
             if key in scope:
                 return scope[key]
         raise KeyError(key)
@@ -76,16 +75,16 @@ class DictStack(UserList, MutableMapping):
         return len(list(iter(self)))
 
     def __setitem__(self, key, item):
-        last = list.__getitem__(self.data, -1)
-        return last.__setitem__(key, item)
+        last_dict = self.data[-1]
+        return last_dict.__setitem__(key, item)
 
     def __delitem__(self, key):
-        last = list.__getitem__(self.data, -1)
-        return last.__delitem__(key)
+        last_dict = self.data[-1]
+        return last_dict.__delitem__(key)
 
     # workaround for mypy confusion
     def pop(self, *args, **kwargs):
         return list.pop(self.data, *args, **kwargs)
 
 
-MutableMapping.register(dict)
+MutableMapping.register(DictStack)
