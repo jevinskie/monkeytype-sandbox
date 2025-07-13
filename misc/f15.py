@@ -138,7 +138,6 @@ class rewriter_dec:
 
 
 class GenericTypeRewriter(Generic[_T], ABC):
-    # _infos: dict[NamePath, AnnotatedMethodInfo]
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
