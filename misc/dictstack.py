@@ -3,13 +3,16 @@ from collections import UserList
 from collections.abc import Mapping, MutableMapping
 from typing import TypeVar, cast
 
+_T = TypeVar("_T")
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
+_KTP = TypeVar("_KTP")
+_VTP = TypeVar("_VTP")
 
 
 # https://github.com/jaraco/jaraco.collections
 # MIT licensed
-class DictStack(UserList[_KT], MutableMapping[_KT, _VT]):
+class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -84,8 +87,17 @@ class DictStack(UserList[_KT], MutableMapping[_KT, _VT]):
         last_dict = self.dicts[-1]
         return last_dict.__delitem__(key)
 
+    # @overload
+    # def pop(self, key: _KT, /) -> _VT:
+    #     assert_never(cast(Never, None))
+    # @overload
+    # def pop(self, key: _KT, /, default: _VT) -> _VT: ...
+    # @overload
+    # def pop(self, _KT, /, default: _T) -> _VT | _T: ...
     # workaround for mypy confusion
-    def pop(self, *args, **kwargs) -> MutableMapping[_KT, _VT]:
+    # def pop(self, index: int = 0) -> MutableMapping[_KT, _VT]:
+    #     return self.dicts.pop(index)
+    def pop(self, *args, **kwargs):
         return self.dicts.pop(*args, **kwargs)
 
 
