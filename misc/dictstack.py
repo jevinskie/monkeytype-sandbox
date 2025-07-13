@@ -51,7 +51,7 @@ class DictStack(UserList, MutableMapping):
 
     def __iter__(self):
         dicts = list.__iter__(self.data)
-        return iter(set(itertools.chain.from_iterable(c.keys() for c in dicts)))
+        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in dicts)))
 
     def __getitem__(self, key):
         for scope in reversed(tuple(list.__iter__(self.data))):

@@ -58,9 +58,11 @@ class DictStack(MutableMapping, UserList):
     >>> len(stack)
     3
     >>> dict(stack)
-    {'a': 2, 'b': 2, 'c': 2}
+    {'a': 2, 'c': 2, 'b': 2}
     >>> list(stack)
-    [{'a': 2, 'c': 2}, {'b': 2, 'a': 2}]
+    ['a', 'c', 'b']
+    >>> stack.data
+    [{'a': 1, 'c': 2}, {'b': 2, 'a': 2}]
     >>> stack.push(dict(a=3))
     >>> stack['a']
     3
@@ -87,7 +89,7 @@ class DictStack(MutableMapping, UserList):
 
     def __iter__(self):
         dicts = list.__iter__(self.data)
-        return iter(set(itertools.chain.from_iterable(c.keys() for c in dicts)))
+        return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in dicts)))
 
     def __getitem__(self, key):
         for scope in reversed(tuple(list.__iter__(self.data))):
