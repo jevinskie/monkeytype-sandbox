@@ -1,10 +1,11 @@
 import itertools
+from collections import UserList
 from collections.abc import Mapping, MutableMapping
 
 
 # https://github.com/jaraco/jaraco.collections
 # MIT licensed
-class DictStack(list, MutableMapping):
+class DictStack(UserList, MutableMapping):
     """
     A stack of dictionaries that behaves as a view on those dictionaries,
     giving preference to the last.
@@ -43,16 +44,16 @@ class DictStack(list, MutableMapping):
     """
 
     def __iter__(self):
-        dicts = list.__iter__(self)
+        dicts = list.__iter__(self.data)
         return iter(set(itertools.chain.from_iterable(c.keys() for c in dicts)))
 
     def __getitem__(self, key):
-        for scope in reversed(tuple(list.__iter__(self))):
+        for scope in reversed(tuple(list.__iter__(self.data))):
             if key in scope:
                 return scope[key]
         raise KeyError(key)
 
-    push = list.append
+    push = UserList.append
 
     def __contains__(self, other):
         return Mapping.__contains__(self, other)
@@ -61,13 +62,13 @@ class DictStack(list, MutableMapping):
         return len(list(iter(self)))
 
     def __setitem__(self, key, item):
-        last = list.__getitem__(self, -1)
+        last = list.__getitem__(self.data, -1)
         return last.__setitem__(key, item)
 
     def __delitem__(self, key):
-        last = list.__getitem__(self, -1)
+        last = list.__getitem__(self.data, -1)
         return last.__delitem__(key)
 
     # workaround for mypy confusion
     def pop(self, *args, **kwargs):
-        return list.pop(self, *args, **kwargs)
+        return list.pop(self.data, *args, **kwargs)
