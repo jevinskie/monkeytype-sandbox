@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import importlib
+import itertools
 from abc import ABC
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, MutableMapping
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
 from typing import (
@@ -39,6 +40,78 @@ _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
+
+
+class DictStack(list, MutableMapping):
+    """
+    A stack of dictionaries that behaves as a view on those dictionaries,
+    giving preference to the last.
+
+    >>> stack = DictStack([dict(a=1, c=2), dict(b=2, a=2)])
+    >>> stack['a']
+    2
+    >>> stack['b']
+    2
+    >>> stack['c']
+    2
+    >>> len(stack)
+    3
+    >>> stack.push(dict(a=3))
+    >>> stack['a']
+    3
+    >>> stack['a'] = 4
+    >>> set(stack.keys()) == set(['a', 'b', 'c'])
+    True
+    >>> set(stack.items()) == set([('a', 4), ('b', 2), ('c', 2)])
+    True
+    >>> dict(**stack) == dict(stack) == dict(a=4, c=2, b=2)
+    True
+    >>> d = stack.pop()
+    >>> stack['a']
+    2
+    >>> d = stack.pop()
+    >>> stack['a']
+    1
+    >>> stack.get('b', None)
+    >>> 'c' in stack
+    True
+    >>> del stack['c']
+    >>> dict(stack)
+    {'a': 1}
+    """
+
+    def __iter__(self):
+        dicts = list.__iter__(self)
+        return iter(set(itertools.chain.from_iterable(c.keys() for c in dicts)))
+
+    def __getitem__(self, key):
+        for scope in reversed(tuple(list.__iter__(self))):
+            if key in scope:
+                return scope[key]
+        raise KeyError(key)
+
+    push = list.append
+
+    def __contains__(self, other):
+        return Mapping.__contains__(self, other)
+
+    def __len__(self):
+        return len(list(iter(self)))
+
+    def __setitem__(self, key, item):
+        last = list.__getitem__(self, -1)
+        return last.__setitem__(key, item)
+
+    def __delitem__(self, key):
+        last = list.__getitem__(self, -1)
+        return last.__delitem__(key)
+
+    # workaround for mypy confusion
+    def pop(self, *args, **kwargs):
+        return list.pop(self, *args, **kwargs)
+
+
+MutableMapping.register(DictStack)
 
 
 class NamePath(NamedTuple):
@@ -114,7 +187,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         if not hasattr(obj, "_infos"):
-            setattr(obj, "_infos", {})
+            setattr(obj, "_infos", DictStack([{}]))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
@@ -136,12 +209,13 @@ class rewriter_dec:
 
 
 class GenericTypeRewriter(Generic[_T], ABC):
-    _infos: dict[NamePath, AnnotatedMethodInfo]
+    # _infos: dict[NamePath, AnnotatedMethodInfo]
+    _infos: DictStack
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
         if not hasattr(self, "_infos"):
-            self._infos = {}
+            self._infos = DictStack([{}])
         self._infos_ro = MappingProxyType(self._infos)
 
     def _call_annotated_method(
