@@ -1,7 +1,7 @@
 import itertools
 from collections import UserList
-from collections.abc import Mapping, MutableMapping
-from typing import TypeVar, cast
+from collections.abc import Iterator, Mapping, MutableMapping
+from typing import Any, TypeVar, cast
 
 _T = TypeVar("_T")
 _KT = TypeVar("_KT")
@@ -62,10 +62,10 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     def dicts(self) -> list[MutableMapping[_KT, _VT]]:
         return cast(list[MutableMapping[_KT, _VT]], self.data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[_KT]:
         return iter(dict.fromkeys(itertools.chain.from_iterable(c.keys() for c in self.dicts)))
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: _KT) -> _VT:
         for scope in reversed(tuple(self.dicts)):
             if key in scope:
                 return scope[key]
@@ -73,17 +73,17 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
 
     push = UserList.append
 
-    def __contains__(self, other):
+    def __contains__(self, other) -> bool:
         return Mapping.__contains__(self, other)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(list(iter(self)))
 
-    def __setitem__(self, key, item):
+    def __setitem__(self, key: _KT, item: _VT) -> None:
         last_dict = self.dicts[-1]
         return last_dict.__setitem__(key, item)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: _KT) -> None:
         last_dict = self.dicts[-1]
         return last_dict.__delitem__(key)
 
@@ -97,7 +97,7 @@ class DictStack(UserList[MutableMapping[_KT, _VT]], MutableMapping[_KT, _VT]):
     # workaround for mypy confusion
     # def pop(self, index: int = 0) -> MutableMapping[_KT, _VT]:
     #     return self.dicts.pop(index)
-    def pop(self, *args, **kwargs):
+    def pop(self, *args: Any, **kwargs: Any) -> MutableMapping[_KT, _VT]:
         return self.dicts.pop(*args, **kwargs)
 
 
