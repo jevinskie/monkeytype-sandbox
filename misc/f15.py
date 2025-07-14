@@ -180,9 +180,9 @@ class GenericTypeRewriterMetaInner(type):
     ) -> GenericTypeRewriterMetaInner:
         print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
-        if "_infos" not in namespace:
-            print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
-            namespace["_infos"] = DictStack(list((dict(),)))
+        # if "_infos" not in namespace:
+        #     print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
+        #     namespace["_infos"] = DictStack(list((dict(),)))
         new_cls = super().__new__(cls, name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
         # if not hasattr(new_cls, "_infos"):
@@ -204,6 +204,9 @@ class GenericTypeRewriterMetaInner(type):
         # if "_infos" not in namespace:
         #     print("_infos() real-init GTR._infos in GTRMI.__init__ pre-super")
         #     namespace["_infos"] =  DictStack(list((dict(),)))
+        if not hasattr(self, "_infos"):
+            print("_infos() real-init GTR._infos in GTRMI.__init__ pre-super")
+            setattr(self, "_infos", DictStack(list((dict(),))))
         print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
         super().__init__(name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
@@ -211,8 +214,10 @@ class GenericTypeRewriterMetaInner(type):
         #     print("_infos() real-init GTR._infos in GTRMI.__init__ post-super")
         #     namespace["_infos"] =  DictStack(list((dict(),)))
         print("pushdict")
-        namespace["_infos"] = copy(namespace["_infos"])
-        namespace["_infos"].pushdict()
+        # namespace["_infos"] = copy(x=namespace["_infos"])
+        # namespace["_infos"].pushdict()
+        setattr(self, "_infos", copy(getattr(self, "_infos")))
+        getattr(self, "_infos").pushdict()
         print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
 
     def __init_subclass__(cls) -> None:
@@ -309,7 +314,7 @@ print("_infos() psdo-init GTR._infos in top level")
 #     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 #     GenericTypeRewriter._infos = DictStack(list((dict(),)))
 print(
-    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {GenericTypeRewriter._infos.dicts}"
+    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {GenericTypeRewriter._infos.mapping}"
 )
 
 
@@ -336,7 +341,7 @@ class TypeRewriter(GenericTypeRewriter):
 
 
 print(
-    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {TypeRewriter._infos.dicts}"
+    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {TypeRewriter._infos.mapping}"
 )
 
 
@@ -363,7 +368,7 @@ class DerivedTypeRewriter(TypeRewriter):
 
 
 print(
-    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {DerivedTypeRewriter._infos.dicts}"
+    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {DerivedTypeRewriter._infos.mapping}"
 )
 
 
@@ -390,7 +395,7 @@ class MuhrivedTypeRewriter(TypeRewriter):
 
 
 print(
-    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {MuhrivedTypeRewriter._infos.dicts}"
+    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {MuhrivedTypeRewriter._infos.mapping}"
 )
 
 
@@ -417,7 +422,7 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
 
 
 print(
-    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {DubDerTypeRewriter._infos.dicts}"
+    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {DubDerTypeRewriter._infos.mapping}"
 )
 
 

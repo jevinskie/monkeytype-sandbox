@@ -81,7 +81,7 @@ class DictStack(MutableMapping[_KT, _VT]):
 
     @property
     def mapping(self) -> MappingProxyType[_KT, _VT]:
-        return MappingProxyType(self)
+        return MappingProxyType(dict(self))
 
     def __iter__(self) -> Iterator[_KT]:
         return iter(dict.fromkeys(itertools.chain.from_iterable(self._dicts)))
