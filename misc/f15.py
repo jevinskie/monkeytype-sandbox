@@ -182,6 +182,9 @@ class GenericTypeRewriterMetaInner(type):
         if "_infos" not in namespace:
             print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
             namespace["_infos"] = DictStack(list((dict(),)))
+        # print("pushdict")
+        # namespace["_infos"] = copy(namespace["_infos"])
+        namespace["_infos"].pushdict()
         new_cls = super().__new__(cls, name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
         # if not hasattr(new_cls, "_infos"):
