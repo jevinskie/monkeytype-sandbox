@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib
 import sys
 from abc import ABCMeta
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from copy import copy
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
@@ -236,10 +236,28 @@ class GenericTypeRewriterMetaInner(type):
     def __init_subclass__(cls) -> None:
         print(f"GTRMI.__init_subclass__: {cls}")
 
+    @classmethod
+    def __prepare__(
+        metacls, name: str, bases: tuple[type, ...], /, **kwds: Any
+    ) -> MutableMapping[str, object]:
+        print(f"GTRMI.__prepare__ metacls: {metacls} name: {name} bases: {bases} kw: {kwds}")
+        r = super().__prepare__(name, bases, **kwds)
+        print(f"GTRMI.__prepare__ result: {r}")
+        return r
+
 
 class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
     def __init_subclass__(cls) -> None:
         print(f"GTRM.__init_subclass__: {cls}")
+
+    @classmethod
+    def __prepare__(
+        metacls, name: str, bases: tuple[type, ...], /, **kwds: Any
+    ) -> MutableMapping[str, object]:
+        print(f"GTRM.__prepare__ metacls: {metacls} name: {name} bases: {bases} kw: {kwds}")
+        r = super().__prepare__(name, bases, **kwds)
+        print(f"GTRM.__prepare__ result: {r}")
+        return r
 
 
 class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
