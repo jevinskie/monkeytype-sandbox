@@ -214,8 +214,9 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
 
 print("_infos() psdo-init GTR._infos in top level")
-print("_infos() real-init GTR._infos in top level")
-GenericTypeRewriter._infos = DictStack(list((dict(),)))
+if not hasattr(GenericTypeRewriter, "_infos"):
+    print("_infos() real-init GTR._infos in top level")
+    GenericTypeRewriter._infos = DictStack(list((dict(),)))
 
 
 class TypeRewriter(GenericTypeRewriter):
