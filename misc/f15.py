@@ -129,7 +129,8 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         if not hasattr(obj, "_infos"):
-            setattr(obj, "_infos", DictStack([{}]))
+            print(f"init _infos in AM.__set_name__ name: {name}")
+            setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
@@ -144,9 +145,10 @@ class rewriter_dec:
     _np: NamePath
     _etc: dict[Any, Any] | None
 
-    def __init__(self, module: str, qualname: str, /, etc: dict[Any, Any] | None = None) -> None:
+    def __init__(self, module: str, qualname: str, /, etcz: dict[Any, Any] | None = None) -> None:
         self._np = NamePath(module, qualname)
-        self._etc = etc
+        self._etc = etcz
+        print(f"RD() np: {self._np} etc: {self._etc}")
 
     def __call__(self, func: _F) -> _F:
         return cast(_F, AnnotatedMethod(func, self._np, etc=self._etc))
@@ -159,7 +161,8 @@ class GenericTypeRewriter(Generic[_T], ABC):
     def __init__(self) -> None:
         # pdbp.set_trace()
         if not hasattr(self, "_infos"):
-            self._infos = DictStack([{}])
+            print("init _infos in GTR.__init__")
+            self._infos = DictStack(list((dict(),)))
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
@@ -204,8 +207,12 @@ class GenericTypeRewriter(Generic[_T], ABC):
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
 
+# print(f"init GTR._infos in top level")
+# GenericTypeRewriter._infos = DictStack(list((dict(), )))
+
+
 class TypeRewriter(GenericTypeRewriter):
-    @rewriter_dec("typing", "Union", etc={"name": "TR.rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", etcz={"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -215,7 +222,7 @@ class TypeRewriter(GenericTypeRewriter):
         print(f"TR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "TR.rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "TR.rewrite_c_ast_Union"})
     def rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -227,7 +234,7 @@ class TypeRewriter(GenericTypeRewriter):
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union", etc={"name": "DTR.der_rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", etcz={"name": "DTR.der_rewrite_typing_Union"})
     def der_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -237,7 +244,7 @@ class DerivedTypeRewriter(TypeRewriter):
         print(f"DTR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etc={"name": "DTR.der_rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "DTR.der_rewrite_c_ast_Union"})
     def der_rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
