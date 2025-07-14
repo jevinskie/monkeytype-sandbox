@@ -122,7 +122,6 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
-        # print(f"AM.__api__ id: {pid(self)} np: {self._namepath} etc: {self._etc}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -146,12 +145,8 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def __set_name__(self, obj: Any, name: str) -> None:
         print(f"AM.__set_name__ sid: {pid(self)} oid: {pid(obj)} name: {name}")
         object.__setattr__(self, "_name", name)
-        # breakpoint()
-        # print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if obj is None:
             raise ValueError(f"None obj? {obj}")
-            # print(f"_infos() real-init in AM.__set_name__ name: {name}")
-            # setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
@@ -173,7 +168,6 @@ class rewriter_dec:
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, "_np", NamePath(self._module, self._qualname))
-        # print(f"RD() np: {self._np} etc: {self._etcz}")
 
     def __call__(self, func: _F) -> _F:
         return cast(_F, AnnotatedMethod(func, self._np, self._etcz))
@@ -287,39 +281,6 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
 
     def __init_subclass__(cls) -> None:
         print(f"GTR.__init_subclass__: {cls}")
-        # pdbp.set_trace()
-        # rinspect(cls)
-        # orig = copy(cls._infos._dicts)
-        # print(
-        #     f"_is_() init: cls: {cls} id(cls): {pid(cls)} id(inf): {pid(cls._infos)} inf: {cls._infos}"
-        # )
-        # print("_is_() init: dicts:")
-        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
-        # print(f"init d*: {dict_id_str}")
-        # print(cls._infos.dicts)
-        # print()
-
-        # super().__init_subclass__()
-
-        # print(f"_is_() midl: cls {cls} id(inf): {pid(cls._infos)} inf: {cls._infos}")
-        # print("_is_() midl: dicts:")
-        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
-        # print(f"midl d*: {dict_id_str}")
-        # print(cls._infos.dicts)
-        # print()
-
-        # cls._infos = copy(cls._infos)
-        # print("pushdict")
-        # cls._infos.pushdict()
-
-        # print(f"_is_() post: cls: {cls} id(inf): {pid(cls._infos)} inf: {cls._infos}")
-        # print("_is_() post: dicts:")
-        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
-        # print(f"post d*: {dict_id_str}")
-        # dict_id_str = " ".join([f"{pid(p)}" for p in orig])
-        # print(f"post od*: {dict_id_str}")
-        # print(cls._infos.dicts)
-        # print()
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
@@ -370,33 +331,6 @@ class TypeRewriter(GenericTypeRewriter):
 print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRewriter._infos)}")
 
 
-# class DerivedTypeRewriter(TypeRewriter):
-#     @rewriter_dec("typing", "Union", {"name": "DTR.der_rewrite_typing_Union"})
-#     def der_rewrite_typing_Union(
-#         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-#     ) -> int:
-#         print(
-#             f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
-#         )
-#         print(f"DTR.type.meta: {meta}\n")
-#         return a + b
-
-#     @rewriter_dec("pycparser.c_ast", "Union", {"name": "DTR.der_rewrite_c_ast_Union"})
-#     def der_rewrite_c_ast_Union(
-#         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-#     ) -> int:
-#         print(
-#             f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
-#         )
-#         print(f"DTR.cast.meta: {meta}\n")
-#         return a * b
-
-
-# print(
-#     f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {pid(DerivedTypeRewriter)} infos: {list(DerivedTypeRewriter._infos)}"
-# )
-
-
 class MuhrivedTypeRewriter(TypeRewriter):
     @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
     def muh_rewrite_construct_Union(
@@ -422,97 +356,3 @@ class MuhrivedTypeRewriter(TypeRewriter):
 print(
     f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {pid(MuhrivedTypeRewriter)} infos: {list(MuhrivedTypeRewriter._infos)}"
 )
-
-
-# class DubDerTypeRewriter(DerivedTypeRewriter):
-#     @rewriter_dec("typing", "Union", {"name": "DDTR.dub_rewrite_typing_Union"})
-#     def dub_rewrite_typing_Union(
-#         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-#     ) -> int:
-#         print(
-#             f"DDTR.dub_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
-#         )
-#         print(f"DDTR.type.meta: {meta}\n")
-#         return a + b
-
-#     @rewriter_dec("pycparser.c_ast", "Union", {"name": "DDTR.dub_rewrite_c_ast_Union"})
-#     def dub_rewrite_c_ast_Union(
-#         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-#     ) -> int:
-#         print(
-#             f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
-#         )
-#         print(f"DDTR.cast.meta: {meta}\n")
-#         return a * b
-
-
-# print(
-#     f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {pid(DubDerTypeRewriter)} infos: {list(DubDerTypeRewriter._infos)}"
-# )
-
-
-# if __name__ == "__main__":
-#     sys.exit(0)
-#     np_t = NamePath("typing", "Union")
-#     np_c = NamePath("pycparser.c_ast", "Union")
-#     np_s = NamePath("construct", "Union")
-#     print(f"np_t: {np_t}")
-#     print(f"np_c: {np_c}")
-
-#     print("\n" * 3)
-
-#     tr = TypeRewriter()
-#     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
-#     print("\n" * 1)
-#     print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100_000, 200_000)}")
-
-#     print("\n" * 7)
-
-#     dtr = DerivedTypeRewriter()
-#     print(f"rw_dty typing.Union: 10, 20: {dtr.rewrite_type(np_t, 30, 40)}")
-#     print("\n" * 1)
-#     print(f"rw_dty c_ast.Union: 100, 200: {dtr.rewrite_type(np_c, 300_000, 400_000)}")
-
-#     print("\n" * 7)
-
-#     mtr = MuhrivedTypeRewriter()
-#     print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
-#     print("\n" * 1)
-#     print(f"rw_mty c_ast.Union: 100, 200: {mtr.rewrite_type(np_c, 500_000, 500_000)}")
-#     print("\n" * 1)
-#     print(f"rw_mty construct.Union: 10, 20: {mtr.rewrite_type(np_s, 400_000, 400_000)}")
-
-#     print("\n" * 7)
-
-#     ddtr = DubDerTypeRewriter()
-#     print(f"rw_ddty typing.Union: 10, 20: {ddtr.rewrite_type(np_t, 60, 60)}")
-#     print("\n" * 1)
-#     print(f"rw_ddty c_ast.Union: 100, 200: {ddtr.rewrite_type(np_c, 600_000, 600_000)}")
-
-#     print("\n" * 5)
-
-#     print("tr() dicts:")
-#     dict_id_str = " ".join([f"{pid(p)}" for p in tr._infos.dicts])
-#     print(f"d*: {dict_id_str}")
-#     print(tr._infos.dicts)
-
-#     print("\n" * 3)
-
-#     print("dtr() dicts:")
-#     dict_id_str = " ".join([f"{pid(p)}" for p in dtr._infos.dicts])
-#     print(f"d*: {dict_id_str}")
-#     print(dtr._infos.dicts)
-
-#     print("\n" * 3)
-
-#     print("mtr() dicts:")
-#     dict_id_str = " ".join([f"{pid(p)}" for p in mtr._infos.dicts])
-#     print(f"d*: {dict_id_str}")
-#     print(mtr._infos.dicts)
-
-#     print("\n" * 3)
-
-#     print("ddtr() dicts:")
-#     dict_id_str = " ".join([f"{pid(p)}" for p in ddtr._infos.dicts])
-#     print(f"d*: {dict_id_str}")
-#     print(ddtr._infos.dicts)
