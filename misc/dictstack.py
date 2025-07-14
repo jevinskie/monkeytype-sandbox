@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import itertools
+import traceback
 from collections.abc import Iterable, Iterator, MutableMapping
 from copy import copy
 from types import MappingProxyType
 from typing import TypeVar
+
+import rich
+import rich.pretty
+import rich.traceback
+
+rich.pretty.install()
+rich.traceback.install()
+traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
@@ -73,6 +82,7 @@ class DictStack(MutableMapping[_KT, _VT]):
     _dicts: list[MutableMapping[_KT, _VT]]
 
     def __init__(self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None) -> None:
+        traceback.print_stack()
         self._dicts = list(dicts) if dicts is not None else []
 
     @property
