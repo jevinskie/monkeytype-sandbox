@@ -11,7 +11,6 @@ from typing import (
     Any,
     Concatenate,
     Generic,
-    NamedTuple,
     ParamSpec,
     TypeVar,
     cast,
@@ -19,6 +18,7 @@ from typing import (
 )
 
 import pdbp
+from attrs import define
 from dictstack import DictStack
 
 if not TYPE_CHECKING:
@@ -34,6 +34,13 @@ if not TYPE_CHECKING:
         def rinspect(*args: Any, **kwargs: Any) -> None:
             print(*args)
 
+    try:
+        from rich.pretty import install as __rpinstall
+
+        print("f15.py rich.pretty.install()")
+        __rpinstall()
+    except ImportError:
+        pass
 else:
 
     def rinspect(*args: Any, **kwargs: Any) -> None: ...
@@ -48,18 +55,21 @@ _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
-class NamePath(NamedTuple):
+@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+class NamePath:
     module: str
     qualname: str
 
 
-class ResolvedNamePath(NamedTuple):
+@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+class ResolvedNamePath:
     namepath: NamePath
     module: ModuleType
     value: Any
 
 
-class AnnotatedMethodInfo(NamedTuple):
+@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+class AnnotatedMethodInfo:
     resolved: ResolvedNamePath
     name: str
     method: MethodType
