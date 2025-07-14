@@ -128,8 +128,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         self._n = name
         if obj is None:
             raise ValueError(f"None obj? {obj}")
+        print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if not hasattr(obj, "_infos"):
-            print(f"init _infos in AM.__set_name__ name: {name}")
+            print(f"_infos() real-init in AM.__set_name__ name: {name}")
             setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
@@ -160,8 +161,9 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
     def __init__(self) -> None:
         # pdbp.set_trace()
+        print("_infos() psdo-init in GTR.__init__")
         if not hasattr(self, "_infos"):
-            print("init _infos in GTR.__init__")
+            print("_infos() real-init GTR.__init__")
             self._infos = DictStack(list((dict(),)))
         self._infos_ro = self._infos.mapping
 
@@ -207,7 +209,8 @@ class GenericTypeRewriter(Generic[_T], ABC):
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
 
-# print(f"init GTR._infos in top level")
+print("_infos() psdo-init GTR._infos in top level")
+# print("_infos() real-init GTR._infos in top level")
 # GenericTypeRewriter._infos = DictStack(list((dict(), )))
 
 
