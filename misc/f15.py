@@ -20,8 +20,10 @@ from typing import (
 )
 
 import pdbp
+import rich
 from attrs import define, field
 from dictstack import DictStack
+from icecream import IceCreamDebugger
 
 if not TYPE_CHECKING:
     try:
@@ -51,6 +53,8 @@ else:
 pdbp  # keep import alive when set_trace() calls are commented out
 copy  # ditto
 sys  # ^
+
+ic = IceCreamDebugger(outputFunction=rich.print, includeContext=True)
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -178,6 +182,7 @@ class GenericTypeRewriterMetaInner(type):
         cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
     ) -> GenericTypeRewriterMetaInner:
         print(f"GTRMI.__new__ name: {name} cls: {cls}")
+        ic("GTRMI.__init__" and pid(cls))
         # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
@@ -272,11 +277,6 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # pdbp.set_trace()
         print(f"GTR.__init__ self: {self}")
         super().__init__()
-        print("_infos() psdo-init in GTR.__init__")
-        # if not hasattr(self, "_infos"):
-        #     print("_infos() real-init GTR.__init__")
-        #     setattr(self, "_infos", DictStack(list((dict(),))))
-        #     self._infos = DictStack(list((dict(),)))
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
