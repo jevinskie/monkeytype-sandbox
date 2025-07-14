@@ -165,9 +165,9 @@ class GenericTypeRewriterMetaInner(type):
         print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} attrs: {attrs}")
         new_cls = super().__new__(cls, name, bases, attrs)
         print("_infos() psdo-init GTR._infos in GTRMI.__new__")
-        if not hasattr(new_cls, "_infos"):
-            print("_infos() real-init GTR._infos in GTRMI.__new__")
-            new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+        # if not hasattr(new_cls, "_infos"):
+        #     print("_infos() real-init GTR._infos in GTRMI.__new__")
+        #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
         print(f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} id: {id(new_cls):#010x}")
         return new_cls
 
