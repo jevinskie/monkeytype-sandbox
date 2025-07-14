@@ -18,7 +18,7 @@ from typing import (
 )
 
 import pdbp
-from attrs import define
+from attrs import define, field
 from dictstack import DictStack
 
 if not TYPE_CHECKING:
@@ -100,26 +100,22 @@ def get_namepath(val: Any) -> NamePath:
     return NamePath(val.__module__, val.__qualname__)
 
 
+@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
-    _rnp: ResolvedNamePath
-    _n: str
-    _f: Callable[Concatenate[_T, _P], _R_co]
-    _fmeta: Callable[Concatenate[_T, _P], _R_co]
+    _func: Callable[Concatenate[_T, _P], _R_co]
+    _namepath: NamePath
     _etc: dict[Any, Any]
+    _name: str = field(init=False)
+    _rnp: ResolvedNamePath = field(init=False)
+    _fmeta: Callable[Concatenate[_T, _P], _R_co] = field(init=False)
 
     # FIXME: Need weakref?
 
-    def __init__(
-        self,
-        func: Callable[Concatenate[_T, _P], _R_co],
-        namepath: NamePath,
-        etc: dict[Any, Any] | None = None,
-    ) -> None:
-        super().__init__()
-        self._rnp = resolve_namepath(namepath)
-        self._f = func
-        self._etc = etc if etc is not None else {}
-        print(f"AM.__init__ id: {id(self):#010x} np: {namepath} etc: {etc}")
+    def __attrs_post_init__(self) -> None:
+        object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
+        if self._etc is None:
+            object.__setattr__(self, "_etc", {})
+        print(f"AM.__api__ id: {id(self):#010x} np: {self._namepath} etc: {self._etc}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -130,19 +126,19 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         if obj is None:
             return self._fmeta
-        p = partial(self._f.__get__(obj, cls), meta=self.as_ntuple())
+        p = partial(self._func.__get__(obj, cls), meta=self.as_ntuple())
         return cast(Callable[_P, _R_co], p)
 
     def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
-        return self._f
+        return self._func
 
     @property
     def __wrapped__(self) -> Callable[Concatenate[_T, _P], _R_co]:
-        return self._f
+        return self._func
 
     def __set_name__(self, obj: Any, name: str) -> None:
         print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
-        self._n = name
+        object.__setattr__(self, "_name", name)
         breakpoint()
         print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if obj is None:
@@ -153,10 +149,10 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._f, meta=nt, etc=self._etc)  # type: ignore
-        self._fmeta = cast(Callable[Concatenate[_T, _P], _R_co], p)
+        object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
-        return AnnotatedMethodInfo(self._rnp, self._n, cast(MethodType, self), self._etc)
+        return AnnotatedMethodInfo(self._rnp, self._name, cast(MethodType, self), self._etc)
 
 
 class rewriter_dec:
