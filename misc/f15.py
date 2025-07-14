@@ -134,9 +134,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
-        if not hasattr(obj, "_infos"):
-            print(f"_infos() real-init in AM.__set_name__ name: {name}")
-            setattr(obj, "_infos", DictStack(list((dict(),))))
+        # if not hasattr(obj, "_infos"):
+        #     print(f"_infos() real-init in AM.__set_name__ name: {name}")
+        #     setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
@@ -177,9 +177,9 @@ class GenericTypeRewriterMetaInner(type):
         print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} kw: {kwds}")
         super().__init__(name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__init")
-        if not hasattr(self, "_infos"):
-            print("_infos() real-init GTR._infos in GTRMI.__init")
-            self._infos = DictStack(list((dict(),)))  # type: ignore
+        # if not hasattr(self, "_infos"):
+        #     print("_infos() real-init GTR._infos in GTRMI.__init")
+        #     self._infos = DictStack(list((dict(),)))  # type: ignore
         print(f"GTRMI.__init__ self: {self} id: {id(self):#010x}")
 
 
@@ -190,6 +190,15 @@ class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
 class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
+
+    def __new__(cls):
+        print(f"GTR.__new__ cls: {cls}")
+        new_cls = super().__new__(cls)
+        print("_infos() psdo-init GTR._infos in GTR.__new__")
+        if not hasattr(new_cls, "_infos"):
+            print("_infos() real-init GTR._infos in GTR.__new__")
+            new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+        return new_cls
 
     def __init__(self) -> None:
         # pdbp.set_trace()
@@ -252,9 +261,9 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
 
 
 print("_infos() psdo-init GTR._infos in top level")
-if not hasattr(GenericTypeRewriter, "_infos"):
-    print("_infos() real-init GTR._infos in top level")
-    GenericTypeRewriter._infos = DictStack(list((dict(),)))
+# if not hasattr(GenericTypeRewriter, "_infos"):
+#     print("_infos() real-init GTR._infos in top level")
+#     GenericTypeRewriter._infos = DictStack(list((dict(),)))
 print(f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x}")
 
 
