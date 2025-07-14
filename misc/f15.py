@@ -58,6 +58,10 @@ _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
 
 
+def pid(obj: Any) -> str:
+    return f"{id(obj):#010x}"
+
+
 @define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
 class NamePath:
     module: str
@@ -118,7 +122,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
-        # print(f"AM.__api__ id: {id(self):#010x} np: {self._namepath} etc: {self._etc}")
+        # print(f"AM.__api__ id: {pid(self)} np: {self._namepath} etc: {self._etc}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -140,7 +144,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._func
 
     def __set_name__(self, obj: Any, name: str) -> None:
-        print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
+        print(f"AM.__set_name__ sid: {pid(self)} oid: {pid(obj)} name: {name}")
         object.__setattr__(self, "_name", name)
         # breakpoint()
         # print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
@@ -197,7 +201,7 @@ class GenericTypeRewriterMetaInner(type):
         setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
         getattr(new_cls, "_infos").pushdict()
         # print(
-        #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
+        #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {pid(cls)} ncid: {pid(new_cls)}"
         # )
         return new_cls
 
@@ -206,7 +210,7 @@ class GenericTypeRewriterMetaInner(type):
     ) -> None:
         print(f"GTRMI.__init__ name: {name}")
         # print(
-        #     f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
+        #     f"GTRMI.__init__ sid: {pid(self)} self: {self} name: {name} ns: {namespace} kw: {kwds}"
         # )
         # pdbp.set_trace()
         # print("_infos() psdo-init GTR._infos in GTRMI.__init__ pre-super")
@@ -216,7 +220,7 @@ class GenericTypeRewriterMetaInner(type):
         # print("pushdict")
         # namespace["_infos"] = copy(namespace["_infos"])
         # namespace["_infos"].pushdict()
-        # print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
+        # print(f"GTRMI.__init__ pre-super self: {self} id: {pid(self)}")
         super().__init__(name, bases, namespace)
         # print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
         # if "_infos" not in namespace:
@@ -227,7 +231,7 @@ class GenericTypeRewriterMetaInner(type):
         # namespace["_infos"].pushdict()
         # setattr(self, "_infos", copy(getattr(self, "_infos")))
         # getattr(self, "_infos").pushdict()
-        # print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
+        # print(f"GTRMI.__init__ post-super self: {self} id: {pid(self)}")
 
     def __init_subclass__(cls) -> None:
         print(f"GTRMI.__init_subclass__: {cls}")
@@ -269,19 +273,19 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # rinspect(cls)
         # orig = copy(cls._infos._dicts)
         # print(
-        #     f"_is_() init: cls: {cls} id(cls): {id(cls):#010x} id(inf): {id(cls._infos):#010x} inf: {cls._infos}"
+        #     f"_is_() init: cls: {cls} id(cls): {pid(cls)} id(inf): {pid(cls._infos)} inf: {cls._infos}"
         # )
         # print("_is_() init: dicts:")
-        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
         # print(f"init d*: {dict_id_str}")
         # print(cls._infos.dicts)
         # print()
 
         # super().__init_subclass__()
 
-        # print(f"_is_() midl: cls {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        # print(f"_is_() midl: cls {cls} id(inf): {pid(cls._infos)} inf: {cls._infos}")
         # print("_is_() midl: dicts:")
-        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
         # print(f"midl d*: {dict_id_str}")
         # print(cls._infos.dicts)
         # print()
@@ -290,11 +294,11 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # print("pushdict")
         # cls._infos.pushdict()
 
-        # print(f"_is_() post: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        # print(f"_is_() post: cls: {cls} id(inf): {pid(cls._infos)} inf: {cls._infos}")
         # print("_is_() post: dicts:")
-        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # dict_id_str = " ".join([f"{pid(p)}" for p in cls._infos.dicts])
         # print(f"post d*: {dict_id_str}")
-        # dict_id_str = " ".join([f"{id(p):#010x}" for p in orig])
+        # dict_id_str = " ".join([f"{pid(p)}" for p in orig])
         # print(f"post od*: {dict_id_str}")
         # print(cls._infos.dicts)
         # print()
@@ -323,7 +327,7 @@ print("_infos() psdo-init GTR._infos in top level")
 #     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 #     GenericTypeRewriter._infos = DictStack(list((dict(),)))
 print(
-    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {list(GenericTypeRewriter._infos)}"
+    f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
 )
 
 
@@ -332,9 +336,7 @@ class TypeRewriter(GenericTypeRewriter):
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
-        print(
-            f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
-        )
+        print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}")
         print(f"TR.type.meta: {meta}\n")
         return a + b
 
@@ -342,16 +344,12 @@ class TypeRewriter(GenericTypeRewriter):
     def rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
-        print(
-            f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
-        )
+        print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}")
         print(f"TR.cast.meta: {meta}\n")
         return a * b
 
 
-print(
-    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {list(TypeRewriter._infos)}"
-)
+print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRewriter._infos)}")
 
 
 # class DerivedTypeRewriter(TypeRewriter):
@@ -360,7 +358,7 @@ print(
 #         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
 #     ) -> int:
 #         print(
-#             f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+#             f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
 #         )
 #         print(f"DTR.type.meta: {meta}\n")
 #         return a + b
@@ -370,14 +368,14 @@ print(
 #         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
 #     ) -> int:
 #         print(
-#             f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+#             f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
 #         )
 #         print(f"DTR.cast.meta: {meta}\n")
 #         return a * b
 
 
 # print(
-#     f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {list(DerivedTypeRewriter._infos)}"
+#     f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {pid(DerivedTypeRewriter)} infos: {list(DerivedTypeRewriter._infos)}"
 # )
 
 
@@ -387,7 +385,7 @@ class MuhrivedTypeRewriter(TypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+            f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
         print(f"MTR.type.meta: {meta}\n")
         return a + b
@@ -397,14 +395,14 @@ class MuhrivedTypeRewriter(TypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+            f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
         print(f"MTR.cast.meta: {meta}\n")
         return a * b
 
 
 print(
-    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {list(MuhrivedTypeRewriter._infos)}"
+    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {pid(MuhrivedTypeRewriter)} infos: {list(MuhrivedTypeRewriter._infos)}"
 )
 
 
@@ -414,7 +412,7 @@ print(
 #         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
 #     ) -> int:
 #         print(
-#             f"DDTR.dub_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+#             f"DDTR.dub_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
 #         )
 #         print(f"DDTR.type.meta: {meta}\n")
 #         return a + b
@@ -424,14 +422,14 @@ print(
 #         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
 #     ) -> int:
 #         print(
-#             f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+#             f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
 #         )
 #         print(f"DDTR.cast.meta: {meta}\n")
 #         return a * b
 
 
 # print(
-#     f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {list(DubDerTypeRewriter._infos)}"
+#     f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {pid(DubDerTypeRewriter)} infos: {list(DubDerTypeRewriter._infos)}"
 # )
 
 
@@ -476,27 +474,27 @@ print(
 #     print("\n" * 5)
 
 #     print("tr() dicts:")
-#     dict_id_str = " ".join([f"{id(p):#010x}" for p in tr._infos.dicts])
+#     dict_id_str = " ".join([f"{pid(p)}" for p in tr._infos.dicts])
 #     print(f"d*: {dict_id_str}")
 #     print(tr._infos.dicts)
 
 #     print("\n" * 3)
 
 #     print("dtr() dicts:")
-#     dict_id_str = " ".join([f"{id(p):#010x}" for p in dtr._infos.dicts])
+#     dict_id_str = " ".join([f"{pid(p)}" for p in dtr._infos.dicts])
 #     print(f"d*: {dict_id_str}")
 #     print(dtr._infos.dicts)
 
 #     print("\n" * 3)
 
 #     print("mtr() dicts:")
-#     dict_id_str = " ".join([f"{id(p):#010x}" for p in mtr._infos.dicts])
+#     dict_id_str = " ".join([f"{pid(p)}" for p in mtr._infos.dicts])
 #     print(f"d*: {dict_id_str}")
 #     print(mtr._infos.dicts)
 
 #     print("\n" * 3)
 
 #     print("ddtr() dicts:")
-#     dict_id_str = " ".join([f"{id(p):#010x}" for p in ddtr._infos.dicts])
+#     dict_id_str = " ".join([f"{pid(p)}" for p in ddtr._infos.dicts])
 #     print(f"d*: {dict_id_str}")
 #     print(ddtr._infos.dicts)
