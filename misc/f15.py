@@ -105,6 +105,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         namepath: NamePath,
         etc: dict[Any, Any] | None = None,
     ) -> None:
+        super().__init__()
         self._rnp = resolve_namepath(namepath)
         self._f = func
         self._etc = etc if etc is not None else {}
@@ -132,10 +133,12 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def __set_name__(self, obj: Any, name: str) -> None:
         print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
         self._n = name
+        breakpoint()
+        print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if obj is None:
             raise ValueError(f"None obj? {obj}")
-        #     print(f"_infos() real-init in AM.__set_name__ name: {name}")
-        #     setattr(obj, "_infos", DictStack(list((dict(),))))
+            # print(f"_infos() real-init in AM.__set_name__ name: {name}")
+            # setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
@@ -151,6 +154,7 @@ class rewriter_dec:
     _etc: dict[Any, Any] | None
 
     def __init__(self, module: str, qualname: str, /, etcz: dict[Any, Any] | None = None) -> None:
+        super().__init__()
         self._np = NamePath(module, qualname)
         self._etc = etcz
         print(f"RD() np: {self._np} etc: {self._etc}")
@@ -206,6 +210,8 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
 
     def __init__(self) -> None:
         # pdbp.set_trace()
+        print(f"GTR.__init__ self: {self}")
+        super().__init__()
         print("_infos() psdo-init in GTR.__init__")
         if not hasattr(self, "_infos"):
             print("_infos() real-init GTR.__init__")
@@ -226,7 +232,7 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # print(cls._infos.dicts)
         # print()
 
-        super().__init_subclass__()
+        # super().__init_subclass__()
 
         # print(f"_is_() midl: cls {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
         # print("_is_() midl: dicts:")
