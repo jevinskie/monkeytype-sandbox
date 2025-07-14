@@ -108,7 +108,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         self._rnp = resolve_namepath(namepath)
         self._f = func
         self._etc = etc if etc is not None else {}
-        print(f"AM() np: {namepath} etc: {etc}")
+        print(f"AM.__init__ id: {id(self):#010x} np: {namepath} etc: {etc}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -130,11 +130,10 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._f
 
     def __set_name__(self, obj: Any, name: str) -> None:
+        print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
         self._n = name
         if obj is None:
             raise ValueError(f"None obj? {obj}")
-        print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
-        # if not hasattr(obj, "_infos"):
         #     print(f"_infos() real-init in AM.__set_name__ name: {name}")
         #     setattr(obj, "_infos", DictStack(list((dict(),))))
         nt = self.as_ntuple()
@@ -168,13 +167,20 @@ class GenericTypeRewriterMetaInner(type):
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__")
         #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
-        print(f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} id: {id(new_cls):#010x}")
+        print(
+            f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
+        )
         return new_cls
 
     def __init__(
         self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
     ) -> None:
-        print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} kw: {kwds}")
+        print(
+            f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
+        )
+        import pdbp
+
+        pdbp.set_trace()
         super().__init__(name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__init")
         # if not hasattr(self, "_infos"):
@@ -209,6 +215,7 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
+        print(f"GTR.__init_subclass__: {cls}")
         # pdbp.set_trace()
         # rinspect(cls)
         # orig = copy(cls._infos._dicts)
