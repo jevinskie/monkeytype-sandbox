@@ -424,9 +424,11 @@ if __name__ == "__main__":
     print("\n" * 7)
 
     mtr = MuhrivedTypeRewriter()
-    print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_s, 50, 50)}")
+    print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
     print("\n" * 1)
     print(f"rw_mty c_ast.Union: 100, 200: {mtr.rewrite_type(np_c, 500_000, 500_000)}")
+    print("\n" * 1)
+    print(f"rw_mty construct.Union: 10, 20: {mtr.rewrite_type(np_s, 400_000, 400_000)}")
 
     print("\n" * 7)
 
