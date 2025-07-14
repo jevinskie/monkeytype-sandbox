@@ -314,7 +314,7 @@ print("_infos() psdo-init GTR._infos in top level")
 #     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 #     GenericTypeRewriter._infos = DictStack(list((dict(),)))
 print(
-    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {GenericTypeRewriter._infos.mapping}"
+    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {list(GenericTypeRewriter._infos)}"
 )
 
 
@@ -341,7 +341,7 @@ class TypeRewriter(GenericTypeRewriter):
 
 
 print(
-    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {TypeRewriter._infos.mapping}"
+    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {list(TypeRewriter._infos)}"
 )
 
 
@@ -368,7 +368,7 @@ class DerivedTypeRewriter(TypeRewriter):
 
 
 print(
-    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {DerivedTypeRewriter._infos.mapping}"
+    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {list(DerivedTypeRewriter._infos)}"
 )
 
 
@@ -395,7 +395,7 @@ class MuhrivedTypeRewriter(TypeRewriter):
 
 
 print(
-    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {MuhrivedTypeRewriter._infos.mapping}"
+    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {list(MuhrivedTypeRewriter._infos)}"
 )
 
 
@@ -422,7 +422,7 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
 
 
 print(
-    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {DubDerTypeRewriter._infos.mapping}"
+    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {list(DubDerTypeRewriter._infos)}"
 )
 
 
