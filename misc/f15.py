@@ -149,7 +149,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         nt = self.as_ntuple()
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
-        p = partial(self._f, meta=nt, etc=self._etc)  # type: ignore
+        p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
@@ -177,15 +177,18 @@ class GenericTypeRewriterMetaInner(type):
     def __new__(
         cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
     ) -> GenericTypeRewriterMetaInner:
-        print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} ns: {namespace}")
-        new_cls = super().__new__(cls, name, bases, namespace)
+        print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         print("_infos() psdo-init GTR._infos in GTRMI.__new__")
+        if "_infos" not in namespace:
+            print("_infos() real-init GTR._infos in GTRMI.__new__")
+            namespace["_infos"] = DictStack(list((dict(),)))
+        new_cls = super().__new__(cls, name, bases, namespace)
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
         #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
         print(
-            f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
+            f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
         )
         return new_cls
 
@@ -196,13 +199,14 @@ class GenericTypeRewriterMetaInner(type):
             f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
         )
         # pdbp.set_trace()
+        print("_infos() psdo-init GTR._infos in GTRMI.__init__")
+        # if "_infos" not in namespace:
+        #     print("_infos() real-init GTR._infos in GTRMI.__init__")
+        #     namespace["_infos"] =  DictStack(list((dict(),)))
+        #     # self._infos = DictStack(list((dict(),)))  # type: ignore
+        print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
         super().__init__(name, bases, namespace)
-        print("_infos() psdo-init GTR._infos in GTRMI.__init")
-        # if not hasattr(self, "_infos"):
-        #     print("_infos() real-init GTR._infos in GTRMI.__init")
-        #     setattr(self, "_infos", DictStack(list((dict(),))))
-        #     self._infos = DictStack(list((dict(),)))  # type: ignore
-        print(f"GTRMI.__init__ self: {self} id: {id(self):#010x}")
+        print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
 
 
 class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
@@ -347,12 +351,12 @@ print(f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union", {"name": "MTR.muh_rewrite_typing_Union"})
-    def muh_rewrite_typing_Union(
+    @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
+    def muh_rewrite_construct_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(
-            f"MTR.muh_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
+            f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {id(meta):#010x}"
         )
         print(f"MTR.type.meta: {meta}\n")
         return a + b
@@ -399,6 +403,7 @@ print(f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#01
 if __name__ == "__main__":
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
+    np_s = NamePath("construct", "Union")
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
 
@@ -419,7 +424,7 @@ if __name__ == "__main__":
     print("\n" * 7)
 
     mtr = MuhrivedTypeRewriter()
-    print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
+    print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_s, 50, 50)}")
     print("\n" * 1)
     print(f"rw_mty c_ast.Union: 100, 200: {mtr.rewrite_type(np_c, 500_000, 500_000)}")
 
