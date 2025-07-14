@@ -178,9 +178,7 @@ class GenericTypeRewriterMetaInner(type):
         print(
             f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
         )
-        import pdbp
-
-        pdbp.set_trace()
+        # pdbp.set_trace()
         super().__init__(name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__init")
         # if not hasattr(self, "_infos"):
