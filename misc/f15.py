@@ -179,15 +179,15 @@ class GenericTypeRewriterMetaInner(type):
         cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
     ) -> GenericTypeRewriterMetaInner:
         print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
-        print("_infos() psdo-init GTR._infos in GTRMI.__new__")
+        print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
-            print("_infos() real-init GTR._infos in GTRMI.__new__")
+            print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
             namespace["_infos"] = DictStack(list((dict(),)))
         new_cls = super().__new__(cls, name, bases, namespace)
+        print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
         # if not hasattr(new_cls, "_infos"):
-        #     print("_infos() real-init GTR._infos in GTRMI.__new__")
+        #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-        #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
         print(
             f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
         )
@@ -200,13 +200,16 @@ class GenericTypeRewriterMetaInner(type):
             f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
         )
         # pdbp.set_trace()
-        print("_infos() psdo-init GTR._infos in GTRMI.__init__")
+        print("_infos() psdo-init GTR._infos in GTRMI.__init__ pre-super")
         # if "_infos" not in namespace:
-        #     print("_infos() real-init GTR._infos in GTRMI.__init__")
+        #     print("_infos() real-init GTR._infos in GTRMI.__init__ pre-super")
         #     namespace["_infos"] =  DictStack(list((dict(),)))
-        #     # self._infos = DictStack(list((dict(),)))  # type: ignore
         print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
         super().__init__(name, bases, namespace)
+        print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
+        # if "_infos" not in namespace:
+        #     print("_infos() real-init GTR._infos in GTRMI.__init__ post-super")
+        #     namespace["_infos"] =  DictStack(list((dict(),)))
         print("pushdict")
         namespace["_infos"] = copy(namespace["_infos"])
         namespace["_infos"].pushdict()
