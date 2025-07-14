@@ -171,7 +171,9 @@ class GenericTypeRewriter(Generic[_T], ABC):
     def __init_subclass__(cls) -> None:
         # pdbp.set_trace()
         orig = copy(cls._infos._dicts)
-        print(f"_is_() init: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        print(
+            f"_is_() init: cls: {cls} id(cls): {id(cls):#010x} id(inf): {id(cls._infos):#010x} inf: {cls._infos}"
+        )
         print("_is_() init: dicts:")
         dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
         print(f"init d*: {dict_id_str}")
@@ -217,6 +219,7 @@ print("_infos() psdo-init GTR._infos in top level")
 if not hasattr(GenericTypeRewriter, "_infos"):
     print("_infos() real-init GTR._infos in top level")
     GenericTypeRewriter._infos = DictStack(list((dict(),)))
+print(f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x}")
 
 
 class TypeRewriter(GenericTypeRewriter):
@@ -241,6 +244,9 @@ class TypeRewriter(GenericTypeRewriter):
         return a * b
 
 
+print(f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x}")
+
+
 class DerivedTypeRewriter(TypeRewriter):
     @rewriter_dec("typing", "Union", etcz={"name": "DTR.der_rewrite_typing_Union"})
     def der_rewrite_typing_Union(
@@ -261,6 +267,9 @@ class DerivedTypeRewriter(TypeRewriter):
         )
         print(f"DTR.cast.meta: {meta}\n")
         return a * b
+
+
+print(f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x}")
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
@@ -285,6 +294,9 @@ class MuhrivedTypeRewriter(TypeRewriter):
         return a * b
 
 
+print(f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x}")
+
+
 class DubDerTypeRewriter(DerivedTypeRewriter):
     @rewriter_dec("typing", "Union", etcz={"name": "DDTR.dub_rewrite_typing_Union"})
     def dub_rewrite_typing_Union(
@@ -305,6 +317,9 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         )
         print(f"DDTR.cast.meta: {meta}\n")
         return a * b
+
+
+print(f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x}")
 
 
 if __name__ == "__main__":
