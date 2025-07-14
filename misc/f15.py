@@ -118,7 +118,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
-        print(f"AM.__api__ id: {id(self):#010x} np: {self._namepath} etc: {self._etc}")
+        # print(f"AM.__api__ id: {id(self):#010x} np: {self._namepath} etc: {self._etc}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -143,7 +143,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
         object.__setattr__(self, "_name", name)
         # breakpoint()
-        print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
+        # print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if obj is None:
             raise ValueError(f"None obj? {obj}")
             # print(f"_infos() real-init in AM.__set_name__ name: {name}")
@@ -169,7 +169,7 @@ class rewriter_dec:
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, "_np", NamePath(self._module, self._qualname))
-        print(f"RD() np: {self._np} etc: {self._etcz}")
+        # print(f"RD() np: {self._np} etc: {self._etcz}")
 
     def __call__(self, func: _F) -> _F:
         return cast(_F, AnnotatedMethod(func, self._np, self._etcz))
@@ -179,8 +179,9 @@ class GenericTypeRewriterMetaInner(type):
     def __new__(
         cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
     ) -> GenericTypeRewriterMetaInner:
-        print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
-        print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
+        print(f"GTRMI.__new__ name: {name} cls: {cls}")
+        # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
+        # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
             print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
             namespace["_infos"] = DictStack(list((dict(),)))
@@ -188,35 +189,36 @@ class GenericTypeRewriterMetaInner(type):
         # namespace["_infos"] = copy(namespace["_infos"])
         # namespace["_infos"].pushdict()
         new_cls = super().__new__(cls, name, bases, namespace)
-        print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
+        # print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
         print("pushdict")
         setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
         getattr(new_cls, "_infos").pushdict()
-        print(
-            f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
-        )
+        # print(
+        #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
+        # )
         return new_cls
 
     def __init__(
         self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
     ) -> None:
-        print(
-            f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
-        )
+        print(f"GTRMI.__init__ name: {name}")
+        # print(
+        #     f"GTRMI.__init__ sid: {id(self):#010x} self: {self} name: {name} ns: {namespace} kw: {kwds}"
+        # )
         # pdbp.set_trace()
-        print("_infos() psdo-init GTR._infos in GTRMI.__init__ pre-super")
+        # print("_infos() psdo-init GTR._infos in GTRMI.__init__ pre-super")
         # if "_infos" not in namespace:
         #     print("_infos() real-init GTR._infos in GTRMI.__init__ pre-super")
         #     namespace["_infos"] =  DictStack(list((dict(),)))
         # print("pushdict")
         # namespace["_infos"] = copy(namespace["_infos"])
         # namespace["_infos"].pushdict()
-        print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
+        # print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
         super().__init__(name, bases, namespace)
-        print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
+        # print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
         # if "_infos" not in namespace:
         #     print("_infos() real-init GTR._infos in GTRMI.__init__ post-super")
         #     namespace["_infos"] =  DictStack(list((dict(),)))
@@ -225,7 +227,7 @@ class GenericTypeRewriterMetaInner(type):
         # namespace["_infos"].pushdict()
         # setattr(self, "_infos", copy(getattr(self, "_infos")))
         # getattr(self, "_infos").pushdict()
-        print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
+        # print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
 
     def __init_subclass__(cls) -> None:
         print(f"GTRMI.__init_subclass__: {cls}")
