@@ -353,3 +353,17 @@ if __name__ == "__main__":
     dict_id_str = " ".join([f"{id(p):#010x}" for p in dtr._infos.dicts])
     print(f"d*: {dict_id_str}")
     print(dtr._infos.dicts)
+
+    print("\n" * 3)
+
+    print("mtr() dicts:")
+    dict_id_str = " ".join([f"{id(p):#010x}" for p in mtr._infos.dicts])
+    print(f"d*: {dict_id_str}")
+    print(mtr._infos.dicts)
+
+    print("\n" * 3)
+
+    print("ddtr() dicts:")
+    dict_id_str = " ".join([f"{id(p):#010x}" for p in ddtr._infos.dicts])
+    print(f"d*: {dict_id_str}")
+    print(ddtr._infos.dicts)
