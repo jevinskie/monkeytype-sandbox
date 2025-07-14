@@ -104,7 +104,7 @@ def get_namepath(val: Any) -> NamePath:
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _func: Callable[Concatenate[_T, _P], _R_co]
     _namepath: NamePath
-    _etc: dict[Any, Any]
+    _etc: dict[Any, Any] | None = field(default=None)
     _name: str = field(init=False)
     _rnp: ResolvedNamePath = field(init=False)
     _fmeta: Callable[Concatenate[_T, _P], _R_co] = field(init=False)
@@ -139,7 +139,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def __set_name__(self, obj: Any, name: str) -> None:
         print(f"AM.__set_name__ sid: {id(self):#010x} oid: {id(obj):#010x} name: {name}")
         object.__setattr__(self, "_name", name)
-        breakpoint()
+        # breakpoint()
         print(f"_infos() psdo-init in AM.__set_name__ name: {name}")
         if obj is None:
             raise ValueError(f"None obj? {obj}")
@@ -155,18 +155,19 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return AnnotatedMethodInfo(self._rnp, self._name, cast(MethodType, self), self._etc)
 
 
+@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
 class rewriter_dec:
-    _np: NamePath
-    _etc: dict[Any, Any] | None
+    _module: str
+    _qualname: str
+    _etcz: dict[Any, Any] | None = field(default=None)
+    _np: NamePath = field(init=False)
 
-    def __init__(self, module: str, qualname: str, /, etcz: dict[Any, Any] | None = None) -> None:
-        super().__init__()
-        self._np = NamePath(module, qualname)
-        self._etc = etcz
-        print(f"RD() np: {self._np} etc: {self._etc}")
+    def __attrs_post_init__(self) -> None:
+        object.__setattr__(self, "_np", NamePath(self._module, self._qualname))
+        print(f"RD() np: {self._np} etc: {self._etcz}")
 
     def __call__(self, func: _F) -> _F:
-        return cast(_F, AnnotatedMethod(func, self._np, etc=self._etc))
+        return cast(_F, AnnotatedMethod(func, self._np, self._etcz))
 
 
 class GenericTypeRewriterMetaInner(type):
@@ -176,6 +177,7 @@ class GenericTypeRewriterMetaInner(type):
         print("_infos() psdo-init GTR._infos in GTRMI.__new__")
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__")
+        #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
         #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
         print(
             f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} cid: {id(cls):#010x} ncid: {id(new_cls):#010x}"
@@ -193,6 +195,7 @@ class GenericTypeRewriterMetaInner(type):
         print("_infos() psdo-init GTR._infos in GTRMI.__init")
         # if not hasattr(self, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__init")
+        #     setattr(self, "_infos", DictStack(list((dict(),))))
         #     self._infos = DictStack(list((dict(),)))  # type: ignore
         print(f"GTRMI.__init__ self: {self} id: {id(self):#010x}")
 
@@ -209,9 +212,10 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         print(f"GTR.__new__ cls: {cls}")
         new_cls = super().__new__(cls)
         print("_infos() psdo-init GTR._infos in GTR.__new__")
-        if not hasattr(new_cls, "_infos"):
-            print("_infos() real-init GTR._infos in GTR.__new__")
-            new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+        # if not hasattr(new_cls, "_infos"):
+        #     print("_infos() real-init GTR._infos in GTR.__new__")
+        #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
+        #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
         return new_cls
 
     def __init__(self) -> None:
@@ -219,9 +223,10 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         print(f"GTR.__init__ self: {self}")
         super().__init__()
         print("_infos() psdo-init in GTR.__init__")
-        if not hasattr(self, "_infos"):
-            print("_infos() real-init GTR.__init__")
-            self._infos = DictStack(list((dict(),)))
+        # if not hasattr(self, "_infos"):
+        #     print("_infos() real-init GTR.__init__")
+        #     setattr(self, "_infos", DictStack(list((dict(),))))
+        #     self._infos = DictStack(list((dict(),)))
         self._infos_ro = self._infos.mapping
 
     def __init_subclass__(cls) -> None:
@@ -248,6 +253,7 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # print()
 
         cls._infos = copy(cls._infos)
+        print("pushdict")
         cls._infos.pushdict()
 
         # print(f"_is_() post: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
@@ -280,12 +286,13 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
 print("_infos() psdo-init GTR._infos in top level")
 # if not hasattr(GenericTypeRewriter, "_infos"):
 #     print("_infos() real-init GTR._infos in top level")
+#     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 #     GenericTypeRewriter._infos = DictStack(list((dict(),)))
 print(f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x}")
 
 
 class TypeRewriter(GenericTypeRewriter):
-    @rewriter_dec("typing", "Union", etcz={"name": "TR.rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", {"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -295,7 +302,7 @@ class TypeRewriter(GenericTypeRewriter):
         print(f"TR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "TR.rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", {"name": "TR.rewrite_c_ast_Union"})
     def rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -310,7 +317,7 @@ print(f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x}")
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union", etcz={"name": "DTR.der_rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", {"name": "DTR.der_rewrite_typing_Union"})
     def der_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -320,7 +327,7 @@ class DerivedTypeRewriter(TypeRewriter):
         print(f"DTR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "DTR.der_rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", {"name": "DTR.der_rewrite_c_ast_Union"})
     def der_rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -335,7 +342,7 @@ print(f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union", etcz={"name": "MTR.muh_rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", {"name": "MTR.muh_rewrite_typing_Union"})
     def muh_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -345,7 +352,7 @@ class MuhrivedTypeRewriter(TypeRewriter):
         print(f"MTR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "MTR.der_rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", {"name": "MTR.der_rewrite_c_ast_Union"})
     def muh_rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -360,7 +367,7 @@ print(f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewrite
 
 
 class DubDerTypeRewriter(DerivedTypeRewriter):
-    @rewriter_dec("typing", "Union", etcz={"name": "DDTR.dub_rewrite_typing_Union"})
+    @rewriter_dec("typing", "Union", {"name": "DDTR.dub_rewrite_typing_Union"})
     def dub_rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
@@ -370,7 +377,7 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         print(f"DDTR.type.meta: {meta}\n")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union", etcz={"name": "DDTR.dub_rewrite_c_ast_Union"})
+    @rewriter_dec("pycparser.c_ast", "Union", {"name": "DDTR.dub_rewrite_c_ast_Union"})
     def dub_rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
