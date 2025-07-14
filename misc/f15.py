@@ -125,6 +125,10 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
         return self._f
 
+    @property
+    def __wrapped__(self) -> Callable[Concatenate[_T, _P], _R_co]:
+        return self._f
+
     def __set_name__(self, obj: Any, name: str) -> None:
         self._n = name
         if obj is None:
@@ -158,13 +162,13 @@ class rewriter_dec:
 
 class GenericTypeRewriterMetaInner(type):
     def __new__(cls, name, bases, attrs):
-        print(f"Creating class {name} with GenericTypeRewriterMetaInner")
+        print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} attrs: {attrs}")
         return super().__new__(cls, name, bases, attrs)
 
     def __init__(
         self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
     ) -> None:
-        print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} dict: {dict}kw: {kwds}")
+        print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} kw: {kwds}")
         return super().__init__(name, bases, namespace)
 
 
