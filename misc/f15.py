@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import sys
 from abc import ABCMeta
 from collections.abc import Callable
 from copy import copy
@@ -206,11 +207,18 @@ class GenericTypeRewriterMetaInner(type):
         #     # self._infos = DictStack(list((dict(),)))  # type: ignore
         print(f"GTRMI.__init__ pre-super self: {self} id: {id(self):#010x}")
         super().__init__(name, bases, namespace)
+        print("pushdict")
+        namespace["_infos"] = copy(namespace["_infos"])
+        namespace["_infos"].pushdict()
         print(f"GTRMI.__init__ post-super self: {self} id: {id(self):#010x}")
+
+    def __init_subclass__(cls) -> None:
+        print(f"GTRMI.__init_subclass__: {cls}")
 
 
 class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
-    pass
+    def __init_subclass__(cls) -> None:
+        print(f"GTRM.__init_subclass__: {cls}")
 
 
 class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
@@ -261,9 +269,9 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
         # print(cls._infos.dicts)
         # print()
 
-        cls._infos = copy(cls._infos)
-        print("pushdict")
-        cls._infos.pushdict()
+        # cls._infos = copy(cls._infos)
+        # print("pushdict")
+        # cls._infos.pushdict()
 
         # print(f"_is_() post: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
         # print("_is_() post: dicts:")
@@ -297,7 +305,9 @@ print("_infos() psdo-init GTR._infos in top level")
 #     print("_infos() real-init GTR._infos in top level")
 #     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 #     GenericTypeRewriter._infos = DictStack(list((dict(),)))
-print(f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x}")
+print(
+    f"GenericTypeRewriter: {GenericTypeRewriter} id: {id(GenericTypeRewriter):#010x} infos: {GenericTypeRewriter._infos.dicts}"
+)
 
 
 class TypeRewriter(GenericTypeRewriter):
@@ -322,7 +332,9 @@ class TypeRewriter(GenericTypeRewriter):
         return a * b
 
 
-print(f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x}")
+print(
+    f"TypeRewriter: {TypeRewriter} id: {id(TypeRewriter):#010x} infos: {TypeRewriter._infos.dicts}"
+)
 
 
 class DerivedTypeRewriter(TypeRewriter):
@@ -347,7 +359,9 @@ class DerivedTypeRewriter(TypeRewriter):
         return a * b
 
 
-print(f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x}")
+print(
+    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {id(DerivedTypeRewriter):#010x} infos: {DerivedTypeRewriter._infos.dicts}"
+)
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
@@ -372,7 +386,9 @@ class MuhrivedTypeRewriter(TypeRewriter):
         return a * b
 
 
-print(f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x}")
+print(
+    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {id(MuhrivedTypeRewriter):#010x} infos: {MuhrivedTypeRewriter._infos.dicts}"
+)
 
 
 class DubDerTypeRewriter(DerivedTypeRewriter):
@@ -397,10 +413,13 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         return a * b
 
 
-print(f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x}")
+print(
+    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {id(DubDerTypeRewriter):#010x} infos: {DubDerTypeRewriter._infos.dicts}"
+)
 
 
 if __name__ == "__main__":
+    sys.exit(0)
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
     np_s = NamePath("construct", "Union")
