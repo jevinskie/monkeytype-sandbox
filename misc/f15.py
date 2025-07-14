@@ -12,6 +12,7 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
+    Self,
     TypeVar,
     cast,
     overload,
@@ -152,6 +153,8 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
+        if self._etc is None:
+            raise ValueError("self._etc is None")
         return AnnotatedMethodInfo(self._rnp, self._name, cast(MethodType, self), self._etc)
 
 
@@ -171,9 +174,11 @@ class rewriter_dec:
 
 
 class GenericTypeRewriterMetaInner(type):
-    def __new__(cls, name, bases, attrs):
-        print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} attrs: {attrs}")
-        new_cls = super().__new__(cls, name, bases, attrs)
+    def __new__(
+        cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
+    ) -> GenericTypeRewriterMetaInner:
+        print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} ns: {namespace}")
+        new_cls = super().__new__(cls, name, bases, namespace)
         print("_infos() psdo-init GTR._infos in GTRMI.__new__")
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__")
@@ -208,7 +213,7 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         print(f"GTR.__new__ cls: {cls}")
         new_cls = super().__new__(cls)
         print("_infos() psdo-init GTR._infos in GTR.__new__")
