@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable, Iterator, MutableMapping
+from copy import copy
 from types import MappingProxyType
 from typing import TypeVar
 
@@ -115,4 +116,4 @@ class DictStack(MutableMapping[_KT, _VT]):
         del self._dicts[-1][key]
 
     def __copy__(self) -> DictStack[_KT, _VT]:
-        return DictStack(list(self._dicts))
+        return DictStack(copy(self._dicts))

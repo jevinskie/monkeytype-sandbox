@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import importlib
-from abc import ABC
+from abc import ABCMeta
 from collections.abc import Callable
 from copy import copy
 from functools import partial
@@ -156,7 +156,23 @@ class rewriter_dec:
         return cast(_F, AnnotatedMethod(func, self._np, etc=self._etc))
 
 
-class GenericTypeRewriter(Generic[_T], ABC):
+class GenericTypeRewriterMetaInner(type):
+    def __new__(cls, name, bases, attrs):
+        print(f"Creating class {name} with GenericTypeRewriterMetaInner")
+        return super().__new__(cls, name, bases, attrs)
+
+    def __init__(
+        self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
+    ) -> None:
+        print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} dict: {dict}kw: {kwds}")
+        return super().__init__(name, bases, namespace)
+
+
+class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
+    pass
+
+
+class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
@@ -170,32 +186,37 @@ class GenericTypeRewriter(Generic[_T], ABC):
 
     def __init_subclass__(cls) -> None:
         # pdbp.set_trace()
-        orig = copy(cls._infos._dicts)
-        print(
-            f"_is_() init: cls: {cls} id(cls): {id(cls):#010x} id(inf): {id(cls._infos):#010x} inf: {cls._infos}"
-        )
-        print("_is_() init: dicts:")
-        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
-        print(f"init d*: {dict_id_str}")
-        print(cls._infos.dicts)
-        print()
+        # rinspect(cls)
+        # orig = copy(cls._infos._dicts)
+        # print(
+        #     f"_is_() init: cls: {cls} id(cls): {id(cls):#010x} id(inf): {id(cls._infos):#010x} inf: {cls._infos}"
+        # )
+        # print("_is_() init: dicts:")
+        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # print(f"init d*: {dict_id_str}")
+        # print(cls._infos.dicts)
+        # print()
+
         super().__init_subclass__()
-        print(f"_is_() midl: cls {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
-        print("_is_() midl: dicts:")
-        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
-        print(f"midl d*: {dict_id_str}")
-        print(cls._infos.dicts)
-        print()
+
+        # print(f"_is_() midl: cls {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        # print("_is_() midl: dicts:")
+        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # print(f"midl d*: {dict_id_str}")
+        # print(cls._infos.dicts)
+        # print()
+
         cls._infos = copy(cls._infos)
         cls._infos.pushdict()
-        print(f"_is_() post: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
-        print("_is_() post: dicts:")
-        dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
-        print(f"post d*: {dict_id_str}")
-        dict_id_str = " ".join([f"{id(p):#010x}" for p in orig])
-        print(f"post od*: {dict_id_str}")
-        print(cls._infos.dicts)
-        print()
+
+        # print(f"_is_() post: cls: {cls} id(inf): {id(cls._infos):#010x} inf: {cls._infos}")
+        # print("_is_() post: dicts:")
+        # dict_id_str = " ".join([f"{id(p):#010x}" for p in cls._infos.dicts])
+        # print(f"post d*: {dict_id_str}")
+        # dict_id_str = " ".join([f"{id(p):#010x}" for p in orig])
+        # print(f"post od*: {dict_id_str}")
+        # print(cls._infos.dicts)
+        # print()
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
