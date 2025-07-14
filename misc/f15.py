@@ -257,17 +257,7 @@ class GenericTypeRewriterMetaInner(type):
 
 
 class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
-    def __init_subclass__(cls) -> None:
-        print(f"GTRM.__init_subclass__: {cls}")
-
-    @classmethod
-    def __prepare__(
-        metacls, name: str, bases: tuple[type, ...], /, **kwds: Any
-    ) -> MutableMapping[str, object]:
-        print(f"GTRM.__prepare__ metacls: {metacls} name: {name} bases: {bases} kw: {kwds}")
-        r = super().__prepare__(name, bases, **kwds)
-        print(f"GTRM.__prepare__ result: {r}")
-        return r
+    pass
 
 
 class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
