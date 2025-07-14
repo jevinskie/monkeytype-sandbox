@@ -50,7 +50,7 @@ else:
 
 pdbp  # keep import alive when set_trace() calls are commented out
 copy  # ditto
-sys  # ditty
+sys  # ^
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
