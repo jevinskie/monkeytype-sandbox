@@ -163,13 +163,24 @@ class rewriter_dec:
 class GenericTypeRewriterMetaInner(type):
     def __new__(cls, name, bases, attrs):
         print(f"GTRMI.__new__ name: {name} cls: {cls} bases: {bases} attrs: {attrs}")
-        return super().__new__(cls, name, bases, attrs)
+        new_cls = super().__new__(cls, name, bases, attrs)
+        print("_infos() psdo-init GTR._infos in GTRMI.__new__")
+        if not hasattr(new_cls, "_infos"):
+            print("_infos() real-init GTR._infos in GTRMI.__new__")
+            new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+        print(f"GTRMI.__new__ cls: {cls} new_cls: {new_cls} id: {id(new_cls):#010x}")
+        return new_cls
 
     def __init__(
         self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
     ) -> None:
         print(f"GTRMI.__init__ self: {self} name: {name} ns: {namespace} kw: {kwds}")
-        return super().__init__(name, bases, namespace)
+        super().__init__(name, bases, namespace)
+        print("_infos() psdo-init GTR._infos in GTRMI.__init")
+        if not hasattr(self, "_infos"):
+            print("_infos() real-init GTR._infos in GTRMI.__init")
+            self._infos = DictStack(list((dict(),)))  # type: ignore
+        print(f"GTRMI.__init__ self: {self} id: {id(self):#010x}")
 
 
 class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
