@@ -1,4 +1,5 @@
 import sys as sys
+import traceback
 import types
 
 print("f18_ext mod top level")
@@ -22,16 +23,14 @@ def f18_ext_frame_thingy(frame: types.FrameType) -> None:
     print(f"f18_ext_frame_thingy() {frame}")
 
 
-big_glob = []
-
-
 class FE:
     class FEI:
         def fei(self):
             class FEIX:
-                class FEIXY:
+                class FEIY:
                     def foo(self):
                         def bar(arg):
+                            traceback.print_stack()
                             return ("flag", sys._getframe(), arg)
 
                         def bar_wrapper():
@@ -39,14 +38,14 @@ class FE:
 
                         return [bar_wrapper, bar_wrapper(), sys._getframe(), None]
 
-            return FEIX.FEIXY()
+            return FEIX.FEIY()
 
-    big_clsvar = FEI().fei().foo()
-    big_clsvar[-1] = big_clsvar[0]()
-    global big_glob
-    big_glob = FEI().fei().foo()
-    big_glob[-1] = big_glob[0]()
+    stuff_clsvar = FEI().fei().foo()
+    stuff_clsvar[-1] = stuff_clsvar[0]()
 
+
+stuff_glob = FE.FEI().fei().foo()
+stuff_glob[-1] = stuff_glob[0]()
 
 print("f18_mod_top_frame:")
 print(f18_ext_mod_top_frame)
