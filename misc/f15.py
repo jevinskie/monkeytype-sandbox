@@ -275,7 +275,7 @@ class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
     pass
 
 
-class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
+class GenericTypeRewriter(Generic[_T]):
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
@@ -319,10 +319,9 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
 
 
 print("_infos() psdo-init GTR._infos in top level")
-# if not hasattr(GenericTypeRewriter, "_infos"):
-#     print("_infos() real-init GTR._infos in top level")
-#     setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
-#     GenericTypeRewriter._infos = DictStack(list((dict(),)))
+if not hasattr(GenericTypeRewriter, "_infos"):
+    print("_infos() real-init GTR._infos in top level")
+    setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
 print(
     f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
 )
