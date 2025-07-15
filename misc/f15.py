@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib
 import sys
 import traceback
-from abc import ABCMeta
 from collections.abc import Callable, MutableMapping
 from copy import copy
 from functools import partial
@@ -213,9 +212,9 @@ class GenericTypeRewriterMetaInner(type):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
         # dump_stack()
-        print("pushdict")
-        setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
-        getattr(new_cls, "_infos").pushdict()
+        # print("pushdict")
+        # setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
+        # getattr(new_cls, "_infos").pushdict()
         # print(
         #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {pid(cls)} ncid: {pid(new_cls)}"
         # )
@@ -268,8 +267,8 @@ class GenericTypeRewriterMetaInner(type):
         return r
 
 
-class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
-    pass
+# class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
+#     pass
 
 
 class GenericTypeRewriter(Generic[_T]):
@@ -295,7 +294,11 @@ class GenericTypeRewriter(Generic[_T]):
         print(f"GTR.__init__() exit self: {pid(self)} {self}")
 
     def __init_subclass__(cls) -> None:
-        print(f"GTR.__init_subclass__(): {cls}")
+        print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls}")
+        print("pushdict")
+        setattr(cls, "_infos", copy(getattr(cls, "_infos")))
+        getattr(cls, "_infos").pushdict()
+        print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
@@ -318,10 +321,14 @@ class GenericTypeRewriter(Generic[_T]):
 print("_infos() psdo-init GTR._infos in top level")
 if not hasattr(GenericTypeRewriter, "_infos"):
     print("_infos() real-init GTR._infos in top level")
-    setattr(GenericTypeRewriter, "_infos", DictStack(list((dict(),))))
+    setattr(GenericTypeRewriter, "_infos", DictStack((dict(),)))
 print(
     f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
 )
+
+print("DictStack.all_instances()")
+rich.pretty.pprint(DictStack.all_instances())
+rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
 
 
 class TypeRewriter(GenericTypeRewriter):
@@ -370,3 +377,8 @@ class MuhrivedTypeRewriter(TypeRewriter):
 print(
     f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {pid(MuhrivedTypeRewriter)} infos: {list(MuhrivedTypeRewriter._infos)}"
 )
+
+
+print("DictStack.all_instances()")
+rich.pretty.pprint(DictStack.all_instances())
+rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])

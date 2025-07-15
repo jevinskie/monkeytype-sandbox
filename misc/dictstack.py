@@ -83,7 +83,7 @@ class DictStack(MutableMapping[_KT, _VT]):
     _all_instances: ClassVar[list[DictStack]] = []
 
     def __init__(self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None) -> None:
-        # traceback.print_stack()
+        traceback.print_stack()
         self._dicts = list(dicts) if dicts is not None else []
         DictStack._all_instances.append(self)
         print(f"DictStack.__init__() all_instances: {DictStack._all_instances}")
