@@ -140,6 +140,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
+        print(f"AM.__init__() exit self: {pid(self)}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -161,17 +162,18 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._func
 
     def __set_name__(self, obj: Any, name: str) -> None:
-        print(f"AM.__set_name__ sid: {pid(self)} oid: {pid(obj)} name: {name}")
+        print(f"AM.__set_name__() entry name: {name} sid: {pid(self)} oid: {pid(obj)}")
         object.__setattr__(self, "_name", name)
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         nt = self.as_ntuple()
         traceback.print_stack()
-        print(f"AM.__set_name__ obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
+        print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
+        print(f"AM.__set_name__() exit name: {name} self: {pid(self)} obj: {pid(self)}")
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
         if self._etc is None:
@@ -197,8 +199,8 @@ class GenericTypeRewriterMetaInner(type):
     def __new__(
         cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
     ) -> GenericTypeRewriterMetaInner:
-        print(f"GTRMI.__new__ name: {name} cls: {cls}")
-        ic("GTRMI.__init__" and pid(cls))
+        print(f"GTRMI.__new__() entry name: {name} cls: {pid(cls)} {cls}")
+        # ic("GTRMI.__init__" and pid(cls))
         # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
@@ -220,12 +222,15 @@ class GenericTypeRewriterMetaInner(type):
         # print(
         #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {pid(cls)} ncid: {pid(new_cls)}"
         # )
+        print(
+            f"GTRMI.__new__() exit name: {name} cls: {pid(cls)} new_cls: {pid(new_cls)} {cls} | {new_cls}"
+        )
         return new_cls
 
     def __init__(
         self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
     ) -> None:
-        print(f"GTRMI.__init__ name: {name}")
+        print(f"GTRMI.__init__() enter name: {name} self: {pid(self)}")
         # print(
         #     f"GTRMI.__init__ sid: {pid(self)} self: {self} name: {name} ns: {namespace} kw: {kwds}"
         # )
@@ -249,17 +254,20 @@ class GenericTypeRewriterMetaInner(type):
         # setattr(self, "_infos", copy(getattr(self, "_infos")))
         # getattr(self, "_infos").pushdict()
         # print(f"GTRMI.__init__ post-super self: {self} id: {pid(self)}")
+        print(f"GTRMI.__init__() exit name: {name} self: {pid(self)}")
 
     def __init_subclass__(cls) -> None:
-        print(f"GTRMI.__init_subclass__: {cls}")
+        print(f"GTRMI.__init_subclass__(): {cls}")
 
     @classmethod
     def __prepare__(
         metacls, name: str, bases: tuple[type, ...], /, **kwds: Any
     ) -> MutableMapping[str, object]:
-        print(f"GTRMI.__prepare__ metacls: {metacls} name: {name} bases: {bases} kw: {kwds}")
+        print(
+            f"GTRMI.__prepare__() entry metacls: {pid(metacls)} {metacls} name: {name} bases: {bases} kw: {kwds}"
+        )
         r = super().__prepare__(name, bases, **kwds)
-        print(f"GTRMI.__prepare__ result: {r}")
+        print(f"GTRMI.__prepare__() exit result: {pid(r)} {r}")
         return r
 
 
@@ -272,23 +280,25 @@ class GenericTypeRewriter(Generic[_T], metaclass=GenericTypeRewriterMeta):
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __new__(cls) -> Self:
-        print(f"GTR.__new__ cls: {cls}")
+        print(f"GTR.__new__() entry cls: {pid(cls)} {cls}")
         new_cls = super().__new__(cls)
         print("_infos() psdo-init GTR._infos in GTR.__new__")
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTR.__new__")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
         #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+        print(f"GTR.__new__() exit cls: {pid(cls)} {cls}")
         return new_cls
 
     def __init__(self) -> None:
         # pdbp.set_trace()
-        print(f"GTR.__init__ self: {self}")
+        print(f"GTR.__init__() entry self: {pid(self)} {self}")
         super().__init__()
         self._infos_ro = self._infos.mapping
+        print(f"GTR.__init__() exit self: {pid(self)} {self}")
 
     def __init_subclass__(cls) -> None:
-        print(f"GTR.__init_subclass__: {cls}")
+        print(f"GTR.__init_subclass__(): {cls}")
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
