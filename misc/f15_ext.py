@@ -6,6 +6,8 @@ from typing import (
     Any,
 )
 
+import rich.pretty
+from dictstack import DictStack
 from f15 import AMI, AMIS, MuhrivedTypeRewriter, NamePath, TypeRewriter, pid, rewriter_dec
 
 if not TYPE_CHECKING:
@@ -86,6 +88,9 @@ print(
     f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {pid(DubDerTypeRewriter)} infos: {list(DubDerTypeRewriter._infos)}"
 )
 
+
+print("DictStack.all_instances()")
+rich.pretty.pprint(DictStack.all_instances())
 
 if __name__ == "__main__":
     sys.exit()

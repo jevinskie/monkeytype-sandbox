@@ -27,7 +27,6 @@ import rich.pretty
 import rich.traceback
 from attrs import define, field
 from dictstack import DictStack
-from icecream import IceCreamDebugger
 
 if not TYPE_CHECKING:
     try:
@@ -61,8 +60,6 @@ sys  # ^
 rich.pretty.install()
 rich.traceback.install(show_locals=True)
 traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
-
-ic = IceCreamDebugger(outputFunction=rich.print, includeContext=True)
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -167,8 +164,8 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         nt = self.as_ntuple()
-        traceback.print_stack()
-        print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
+        # dump_stack()
+        # print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
         obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
@@ -204,7 +201,7 @@ class GenericTypeRewriterMetaInner(type):
         # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
-            dump_stack()
+            # dump_stack()
             print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
             namespace["_infos"] = DictStack(list((dict(),)))
         # print("pushdict")
@@ -215,7 +212,7 @@ class GenericTypeRewriterMetaInner(type):
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-        dump_stack()
+        # dump_stack()
         print("pushdict")
         setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
         getattr(new_cls, "_infos").pushdict()
