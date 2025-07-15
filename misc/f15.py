@@ -300,7 +300,11 @@ class GenericTypeRewriter(Generic[_T]):
     def __init_subclass__(cls) -> None:
         print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls}")
         print("pushdict")
-        setattr(cls, "_infos", copy(getattr(cls, "_infos")))
+        setattr(
+            cls,
+            "_infos",
+            DictStack([copy(d) for d in getattr(cls, "_infos").dicts], name=cls.__name__),
+        )
         getattr(cls, "_infos").pushdict()
         print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
@@ -325,7 +329,7 @@ class GenericTypeRewriter(Generic[_T]):
 print("_infos() psdo-init GTR._infos in top level")
 if not hasattr(GenericTypeRewriter, "_infos"):
     print("_infos() real-init GTR._infos in top level")
-    setattr(GenericTypeRewriter, "_infos", DictStack())
+    setattr(GenericTypeRewriter, "_infos", DictStack(name="GTRRoot"))
     GenericTypeRewriter._infos.pushdict()
 print(
     f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"

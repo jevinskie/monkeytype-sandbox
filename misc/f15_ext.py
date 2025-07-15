@@ -92,6 +92,7 @@ print(
 print("DictStack.all_instances()")
 rich.pretty.pprint(DictStack.all_instances())
 rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
+rich.pretty.pprint([dict(ds) for ds in DictStack.all_instances()])
 
 if __name__ == "__main__":
     sys.exit()

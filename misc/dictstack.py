@@ -9,6 +9,7 @@ from typing import ClassVar, TypeVar
 
 import rich
 import rich.pretty
+import rich.repr
 import rich.traceback
 
 rich.pretty.install()
@@ -81,12 +82,17 @@ class DictStack(MutableMapping[_KT, _VT]):
 
     _dicts: list[MutableMapping[_KT, _VT]]
     _all_instances: ClassVar[list[DictStack]] = []
+    _name: str | None
 
-    def __init__(self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None) -> None:
-        traceback.print_stack()
+    def __init__(
+        self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None, name: str | None = None
+    ) -> None:
+        # traceback.print_stack()
+        self._name = name
         self._dicts = list(dicts) if dicts is not None else []
         DictStack._all_instances.append(self)
-        print(f"DictStack.__init__() all_instances: {DictStack._all_instances}")
+        print("DictStack.__init__() all_instances:")
+        rich.pretty.pprint(DictStack._all_instances)
 
     @property
     def dicts(self) -> list[MutableMapping[_KT, _VT]]:
@@ -119,6 +125,7 @@ class DictStack(MutableMapping[_KT, _VT]):
         return len(list(iter(self)))
 
     def __setitem__(self, key: _KT, item: _VT) -> None:
+        print(f"DictStack.__setitem__() name: {self._name} key: {key}")
         if not self._dicts:
             raise IndexError("DictStack stack is empty")
         self._dicts[-1][key] = item
@@ -130,6 +137,17 @@ class DictStack(MutableMapping[_KT, _VT]):
 
     def __copy__(self) -> DictStack[_KT, _VT]:
         return DictStack(copy(self._dicts))
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "name", self._name
+        yield "id", id(self)
+        yield "keys", dict(self).keys()
+
+    @property
+    def name(self) -> str:
+        if self._name is None:
+            raise ValueError(f"DictStack name is none self: {self}")
+        return self._name
 
     @staticmethod
     def all_instances() -> list[DictStack]:
