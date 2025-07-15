@@ -12,7 +12,7 @@ import rich.pretty
 import rich.traceback
 
 rich.pretty.install()
-rich.traceback.install()
+rich.traceback.install(show_locals=True)
 traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 _KT = TypeVar("_KT")

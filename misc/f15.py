@@ -22,6 +22,7 @@ from typing import (
 
 import pdbp
 import rich
+import rich.console
 import rich.pretty
 import rich.traceback
 from attrs import define, field
@@ -58,7 +59,7 @@ copy  # ditto
 sys  # ^
 
 rich.pretty.install()
-rich.traceback.install()
+rich.traceback.install(show_locals=True)
 traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 ic = IceCreamDebugger(outputFunction=rich.print, includeContext=True)
@@ -96,6 +97,11 @@ class AnnotatedMethodInfo:
 
 AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, object())
+
+
+def dump_stack() -> None:
+    tb = rich.traceback.Traceback(show_locals=True)
+    print(tb)
 
 
 def dotted_getattr(obj: Any, path: str) -> Any:
@@ -195,7 +201,7 @@ class GenericTypeRewriterMetaInner(type):
         # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
         # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
         if "_infos" not in namespace:
-            traceback.print_stack()
+            dump_stack()
             print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
             namespace["_infos"] = DictStack(list((dict(),)))
         # print("pushdict")
@@ -206,7 +212,7 @@ class GenericTypeRewriterMetaInner(type):
         # if not hasattr(new_cls, "_infos"):
         #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
         #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-        traceback.print_stack()
+        dump_stack()
         print("pushdict")
         setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
         getattr(new_cls, "_infos").pushdict()
