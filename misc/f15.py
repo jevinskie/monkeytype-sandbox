@@ -100,8 +100,9 @@ AMIS = cast(AnnotatedMethodInfo, object())
 
 
 def dump_stack() -> None:
-    tb = rich.traceback.Traceback(show_locals=True)
-    print(tb)
+    # tb = rich.traceback.Traceback(show_locals=True)
+    # print(tb)
+    pass
 
 
 def dotted_getattr(obj: Any, path: str) -> Any:
