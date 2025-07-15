@@ -275,6 +275,20 @@ class GenericTypeRewriterMetaInner(type):
 #     pass
 
 
+class class_dec:
+    def __init__(self, *args, **kwargs) -> None:
+        print(f"class_dec.__init__() entry args: {args} kw: {kwargs}")
+        super().__init__(*args, **kwargs)
+        print(f"class_dec.__init__() exit: self: {pid(self)} {self}")
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        print(f"class_dec.__call__() entry args: {args} kw: {kwds}")
+        r = args[0]
+        print(f"class_dec.__call__() exit res: {r}")
+        return r
+
+
+@class_dec()
 class GenericTypeRewriter(Generic[_T]):
     _infos: DictStack[NamePath, AnnotatedMethodInfo]
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
