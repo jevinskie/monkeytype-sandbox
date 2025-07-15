@@ -21,8 +21,8 @@ from typing import (
 
 import pdbp
 import rich
-import rich.console
 import rich.pretty
+import rich.repr
 import rich.traceback
 from attrs import define, field
 from dictstack import DictStack
@@ -89,6 +89,10 @@ class AnnotatedMethodInfo:
     name: str
     method: MethodType
     etc: dict[Any, Any]
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "name", self.name
+        yield "etc", self.etc
 
 
 AMI = AnnotatedMethodInfo
@@ -321,14 +325,15 @@ class GenericTypeRewriter(Generic[_T]):
 print("_infos() psdo-init GTR._infos in top level")
 if not hasattr(GenericTypeRewriter, "_infos"):
     print("_infos() real-init GTR._infos in top level")
-    setattr(GenericTypeRewriter, "_infos", DictStack((dict(),)))
+    setattr(GenericTypeRewriter, "_infos", DictStack())
+    GenericTypeRewriter._infos.pushdict()
 print(
     f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
 )
 
-print("DictStack.all_instances()")
-rich.pretty.pprint(DictStack.all_instances())
-rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
+# print("DictStack.all_instances()")
+# rich.pretty.pprint(DictStack.all_instances())
+# rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
 
 
 class TypeRewriter(GenericTypeRewriter):
@@ -379,6 +384,6 @@ print(
 )
 
 
-print("DictStack.all_instances()")
-rich.pretty.pprint(DictStack.all_instances())
-rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
+# print("DictStack.all_instances()")
+# rich.pretty.pprint(DictStack.all_instances())
+# rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
