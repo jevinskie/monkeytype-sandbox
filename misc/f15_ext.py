@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -87,6 +88,7 @@ print(
 
 
 if __name__ == "__main__":
+    sys.exit()
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
     np_s = NamePath("construct", "Union")
