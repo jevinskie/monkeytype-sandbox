@@ -19,8 +19,14 @@ from typing import (
 )
 
 import pdbp
-import rich.repr
-from attrs import define, field
+from attrs import define
+from attrs import field as afield
+
+try:
+    import rich.repr
+except ImportError:
+    pass
+
 
 oprint = print
 if not TYPE_CHECKING:
@@ -127,10 +133,10 @@ def get_namepath(val: Any) -> NamePath:
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _func: Callable[Concatenate[_T, _P], _R_co]
     _namepath: NamePath
-    _name: str = field(init=False)
-    _rnp: ResolvedNamePath = field(init=False)
-    _fmeta: Callable[Concatenate[_T, _P], _R_co] = field(init=False)
-    _self_np: NamePath = field(init=False)
+    _name: str = afield(init=False)
+    _rnp: ResolvedNamePath = afield(init=False)
+    _fmeta: Callable[Concatenate[_T, _P], _R_co] = afield(init=False)
+    _self_np: NamePath = afield(init=False)
 
     # FIXME: Need weakref?
 
@@ -189,17 +195,20 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._self_np
 
 
-@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
 class rewriter_dec:
-    _module: str
-    _qualname: str
-    _np: NamePath = field(init=False)
+    tgt_namepath: NamePath
 
-    def __attrs_post_init__(self) -> None:
-        object.__setattr__(self, "_np", NamePath(self._module, self._qualname))
+    def __init__(self, tgt_module: str, tgt_qualname: str) -> None:
+        self.tgt_namepath = NamePath(tgt_module, tgt_qualname)
 
     def __call__(self, func: _F) -> _F:
-        return cast(_F, AnnotatedMethod(func, self._np))
+        return cast(_F, AnnotatedMethod(func, self.tgt_namepath))
+
+    def __repr__(self) -> str:
+        return f'rewriter_dec("{self.tgt_namepath.module}", "{self.tgt_namepath.qualname}")'
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "tgt_namepath", self.tgt_namepath
 
 
 # TODO: change _cls_rewrite_meths value type to MethodInfo?
