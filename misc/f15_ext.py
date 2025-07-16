@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
     print(f"np_s: {np_s}")
-    sys.exit()
+    # sys.exit()
 
     print("\n" * 3)
 

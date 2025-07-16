@@ -254,6 +254,11 @@ class GenericTypeRewriter(Generic[_T]):
         return self._namespaces_ro
 
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
+        rewriters = self._namespaces
+        mro = type(self).mro()
+        for rwcls, rwcls_meth in rewriters.items():
+            print(f"mro: {mro} rwcls: {rwcls} rwcls_meth: {rwcls_meth}")
+
         rewriter = dict(self.registry).get(namepath, None)  # type: ignore
         print(f"rewriter: {rewriter}")
         if rewriter:
