@@ -195,7 +195,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._self_np
 
 
-class rewriter_dec:
+class rewrite_this:
     tgt_namepath: NamePath
 
     def __init__(self, tgt_module: str, tgt_qualname: str) -> None:
@@ -262,32 +262,24 @@ class GenericTypeRewriter(Generic[_T]):
 
 
 class TypeRewriter(GenericTypeRewriter):
-    @rewriter_dec("typing", "Union")
-    def rewrite_typing_Union(
-        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-    ) -> int:
-        print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}")
-        # print(f"TR.type.meta: {meta}\n")
+    @rewrite_this("typing", "Union")
+    def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union")
-    def rewrite_c_ast_Union(
-        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-    ) -> int:
-        print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"TR.cast.meta: {meta}\n")
+    @rewrite_this("pycparser.c_ast", "Union")
+    def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("construct", "Union")
+    @rewrite_this("construct", "Union")
     def muh_rewrite_construct_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"MTR.type.meta: {meta}\n")
+        print(f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union")
+    @rewrite_this("pycparser.c_ast", "Union")
     def muh_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"MTR.cast.meta: {meta}\n")
+        print(f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b

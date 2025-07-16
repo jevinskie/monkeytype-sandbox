@@ -5,16 +5,13 @@ from typing import (
     Any,
 )
 
-import rich.pretty
 from f15 import (
     AMI,
     AMIS,
-    GenericTypeRewriter,
     MuhrivedTypeRewriter,
     NamePath,
     TypeRewriter,
-    pid,
-    rewriter_dec,
+    rewrite_this,
 )
 
 if not TYPE_CHECKING:
@@ -36,29 +33,23 @@ else:
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    @rewriter_dec("typing", "Union")
+    @rewrite_this("typing", "Union")
     def der_rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"DTR.type.meta: {meta}\n")
+        print(f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewriter_dec("pycparser.c_ast", "Union")
+    @rewrite_this("pycparser.c_ast", "Union")
     def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"DTR.cast.meta: {meta}\n")
+        print(f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
 
 
 class DubDerTypeRewriter(DerivedTypeRewriter, MuhrivedTypeRewriter):
-    @rewriter_dec("pycparser.c_ast", "Union")
+    @rewrite_this("pycparser.c_ast", "Union")
     def dub_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b} id(m): {pid(meta)}")
-        # print(f"DDTR.cast.meta: {meta}\n")
+        print(f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
 
-
-print("GenericTypeRewriter._namespaces")
-rich.pretty.pprint(GenericTypeRewriter)
 
 if __name__ == "__main__":
     np_t = NamePath("typing", "Union")
@@ -69,36 +60,35 @@ if __name__ == "__main__":
     print(f"np_s: {np_s}")
     # sys.exit()
 
-    print("\n" * 3)
+    print("\n" * 2)
 
     tr = TypeRewriter()
     print(f"rw_ty typing.Union: 10, 20: {tr.rewrite_type(np_t, 10, 20)}")
-    print("\n" * 1)
+    print()
     print(f"rw_ty c_ast.Union: 100, 200: {tr.rewrite_type(np_c, 100_000, 200_000)}")
 
-    print("\n" * 7)
+    print("\n" * 2)
 
     dtr = DerivedTypeRewriter()
     print(f"rw_dty typing.Union: 10, 20: {dtr.rewrite_type(np_t, 30, 40)}")
-    print("\n" * 1)
+    print()
     print(f"rw_dty c_ast.Union: 100, 200: {dtr.rewrite_type(np_c, 300_000, 400_000)}")
 
-    print("\n" * 7)
+    print("\n" * 2)
 
     mtr = MuhrivedTypeRewriter()
     print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
-    print("\n" * 1)
+    print()
     print(f"rw_mty c_ast.Union: 100, 200: {mtr.rewrite_type(np_c, 500_000, 500_000)}")
-    print("\n" * 1)
+    print()
     print(f"rw_mty construct.Union: 10, 20: {mtr.rewrite_type(np_s, 400_000, 400_000)}")
 
-    print("\n" * 7)
+    print("\n" * 2)
 
     ddtr = DubDerTypeRewriter()
     print(f"rw_ddty typing.Union: 10, 20: {ddtr.rewrite_type(np_t, 60, 60)}")
-    print("\n" * 1)
+    print()
     print(f"rw_ddty c_ast.Union: 100, 200: {ddtr.rewrite_type(np_c, 600_000, 600_000)}")
-    print("\n" * 1)
+    print()
     print(f"rw_ddty construct.Union: 10, 20: {ddtr.rewrite_type(np_s, 600_000, 600_000)}")
-
-    print("\n" * 5)
+    print()
