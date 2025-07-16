@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import sys as sys
-import traceback
 import types
-from typing import cast
+from typing import Any, cast
+
+from rich import print
 
 print("f18_ext mod top level")
 
@@ -26,14 +27,45 @@ def f18_ext_frame_thingy(frame: types.FrameType) -> None:
     print(f"f18_ext_frame_thingy() {frame}")
 
 
+class DummyRewriterMeta(type):
+    # def __new__(cls, *args, **kwargs) -> None:
+    def __new__(
+        cls: type[DummyRewriterMeta],
+        name: str,
+        bases: tuple[type, ...],
+        namespace: dict[str, Any],
+        /,
+        **kwargs: Any,
+    ) -> type[DummyRewriterMeta]:
+        print(
+            f"DummyRewriterMeta.__new__() pre cls: {cls} bases: {bases} ns: {namespace} kwargs: {kwargs}"
+        )
+        r = super().__new__(cls, name, bases, namespace, **kwargs)
+        print(f"DummyRewriterMeta.__new__() post cls: {cls} r: {r}")
+        return r
+
+    def __init__(self, *args, **kwargs) -> None:
+        print(f"DummyRewriterMeta.__init__() pre self: {self} args: {args} kwargs: {kwargs}")
+        super().__init__(*args, **kwargs)
+        print(f"DummyRewriterMeta.__init__() post self: {self} args: {args} kwargs: {kwargs}")
+
+    def __init_subclass__(cls) -> None:
+        print(f"DummyRewriterMeta.__init_subclass__() cls: {cls}")
+
+
+class DummyRewriter(metaclass=DummyRewriterMeta):
+    def __init_subclass__(cls) -> None:
+        print(f"DummyRewriter.__init_subclass__() cls: {cls}")
+
+
 class FE:
     class FEI:
         def fei(self):
-            class FEIX:
-                class FEIY:
+            class FEIX(DummyRewriter):
+                class FEIY(DummyRewriter):
                     def foo(self):
                         def bar(arg):
-                            traceback.print_stack()
+                            # traceback.print_stack()
                             return ("flag", sys._getframe(), arg)
 
                         def bar_wrapper():
