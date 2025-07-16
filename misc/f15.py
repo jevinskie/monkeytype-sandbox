@@ -4,6 +4,7 @@ import importlib
 import sys
 from collections.abc import Callable
 from copy import copy
+from dataclasses import dataclass, field
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
 from typing import (
@@ -19,8 +20,6 @@ from typing import (
 )
 
 import pdbp
-from attrs import define
-from attrs import field as afield
 
 try:
     import rich.repr
@@ -71,25 +70,28 @@ def pid(obj: Any) -> str:
     return f"{id(obj):#010x}"
 
 
-@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class NamePath:
     module: str
     qualname: str
 
 
-@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class ResolvedNamePath:
     namepath: NamePath
     module: ModuleType
     value: Any
 
 
-@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+@dataclass(frozen=True, order=True)
 class AnnotatedMethodInfo:
     resolved: ResolvedNamePath
     name: str
     self_namepath: NamePath
     method: MethodType
+
+    def __repr__(self) -> str:
+        return f'<AnnotatedMethodInfo name="{self.name}" self_namepath={self.self_namepath}>'
 
     def __rich_repr__(self) -> rich.repr.Result:
         yield "name", self.name
@@ -97,7 +99,7 @@ class AnnotatedMethodInfo:
 
 
 AMI = AnnotatedMethodInfo
-AMIS = cast(AnnotatedMethodInfo, object())
+AMIS = cast(AnnotatedMethodInfo, object())  # sentinel default object for meta kwarg
 
 
 class SetOnceDict(dict[_KT, _VT]):
@@ -129,18 +131,18 @@ def get_namepath(val: Any) -> NamePath:
     return NamePath(val.__module__, val.__qualname__)
 
 
-@define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
+@dataclass(frozen=True)
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _func: Callable[Concatenate[_T, _P], _R_co]
     _namepath: NamePath
-    _name: str = afield(init=False)
-    _rnp: ResolvedNamePath = afield(init=False)
-    _fmeta: Callable[Concatenate[_T, _P], _R_co] = afield(init=False)
-    _self_np: NamePath = afield(init=False)
+    _name: str = field(init=False)
+    _rnp: ResolvedNamePath = field(init=False)
+    _fmeta: Callable[Concatenate[_T, _P], _R_co] = field(init=False)
+    _self_np: NamePath = field(init=False)
 
     # FIXME: Need weakref?
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], None))
 
