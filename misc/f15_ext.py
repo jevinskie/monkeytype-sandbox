@@ -57,17 +57,7 @@ class DerivedTypeRewriter(TypeRewriter):
         return a * b
 
 
-class DubDerTypeRewriter(DerivedTypeRewriter):
-    @rewriter_dec("typing", "Union", {"name": "DDTR.dub_rewrite_typing_Union"})
-    def dub_rewrite_typing_Union(
-        self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
-    ) -> int:
-        print(
-            f"DDTR.dub_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
-        )
-        # print(f"DDTR.type.meta: {meta}\n")
-        return a + b
-
+class DubDerTypeRewriter(DerivedTypeRewriter, MuhrivedTypeRewriter):
     @rewriter_dec("pycparser.c_ast", "Union", {"name": "DDTR.dub_rewrite_c_ast_Union"})
     def dub_rewrite_c_ast_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
@@ -120,5 +110,7 @@ if __name__ == "__main__":
     print(f"rw_ddty typing.Union: 10, 20: {ddtr.rewrite_type(np_t, 60, 60)}")
     print("\n" * 1)
     print(f"rw_ddty c_ast.Union: 100, 200: {ddtr.rewrite_type(np_c, 600_000, 600_000)}")
+    print("\n" * 1)
+    print(f"rw_ddty construct.Union: 10, 20: {ddtr.rewrite_type(np_s, 600_000, 600_000)}")
 
     print("\n" * 5)
