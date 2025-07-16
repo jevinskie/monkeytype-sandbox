@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -80,16 +81,16 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
 
 
 print("GenericTypeRewriter._namespaces")
-rich.pretty.pprint(GenericTypeRewriter._namespaces)
+rich.pretty.pprint(GenericTypeRewriter)
 
 if __name__ == "__main__":
-    # sys.exit()
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
     np_s = NamePath("construct", "Union")
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
     print(f"np_s: {np_s}")
+    sys.exit()
 
     print("\n" * 3)
 
