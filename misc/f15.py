@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib
-import inspect
 import sys
 from collections.abc import Callable
 from copy import copy
@@ -22,7 +21,6 @@ from typing import (
 import pdbp
 import rich.repr
 from attrs import define, field
-from dictstack import DictStack
 
 oprint = print
 if not TYPE_CHECKING:
@@ -105,29 +103,7 @@ class SetOnceDict(dict[_KT, _VT]):
         super().__setitem__(key, value)
 
 
-class SetOnceDictStack(DictStack[_KT, _VT]):
-    def __setitem__(self, key: _KT, value: _VT, /) -> None:
-        if key in self:
-            raise ValueError(
-                f"Key '{key}' already exists. Existing value: {self[key]} New value: {value}"
-            )
-        super().__setitem__(key, value)
-
-
 def dotted_getattr(obj: Any, path: str) -> Any:
-    for part in path.split("."):
-        obj = getattr(obj, part)
-    return obj
-
-
-def mro_getattr(obj: Any, path: str) -> Any:
-    inspect.getmro(type(obj))
-    for part in path.split("."):
-        obj = getattr(obj, part)
-    return obj
-
-
-def dotted_mro_getattr(obj: Any, path: str) -> Any:
     for part in path.split("."):
         obj = getattr(obj, part)
     return obj
