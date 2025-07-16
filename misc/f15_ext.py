@@ -8,7 +8,16 @@ from typing import (
 
 import rich.pretty
 from dictstack import DictStack
-from f15 import AMI, AMIS, MuhrivedTypeRewriter, NamePath, TypeRewriter, pid, rewriter_dec
+from f15 import (
+    AMI,
+    AMIS,
+    GenericTypeRewriter,
+    MuhrivedTypeRewriter,
+    NamePath,
+    TypeRewriter,
+    pid,
+    rewriter_dec,
+)
 
 if not TYPE_CHECKING:
     try:
@@ -93,6 +102,9 @@ print("DictStack.all_instances()")
 rich.pretty.pprint(DictStack.all_instances())
 rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
 rich.pretty.pprint([dict(ds) for ds in DictStack.all_instances()])
+
+print("GenericTypeRewriter._namespaces")
+rich.pretty.pprint(GenericTypeRewriter._namespaces)
 
 if __name__ == "__main__":
     sys.exit()

@@ -9,6 +9,7 @@ from types import MappingProxyType, MethodType, ModuleType
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Concatenate,
     Generic,
     ParamSpec,
@@ -139,6 +140,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
 
     def __attrs_post_init__(self) -> None:
         object.__setattr__(self, "_rnp", resolve_namepath(self._namepath))
+        object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], None))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
         print(f"AM.__init__() exit self: {pid(self)}")
@@ -171,6 +173,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         # dump_stack()
         # print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
         obj._infos[self._rnp.namepath] = nt
+        obj._namespaces[self._func] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
@@ -303,6 +306,7 @@ class GenericTypeRewriter(Generic[_T]):
     _infos: DictStack[NamePath, AnnotatedMethodInfo] = DictStack(name="GTRRoot")
     _infos.pushdict()
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
+    _namespaces: ClassVar[dict[Any, AnnotatedMethodInfo]] = {}
 
     # def __new__(cls) -> Self:
     #     raise RuntimeError("ffff")
