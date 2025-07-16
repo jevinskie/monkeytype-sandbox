@@ -96,7 +96,7 @@ class DictStack(MutableMapping[_KT, _VT]):
     def __iter__(self) -> Iterator[_KT]:
         return iter(dict.fromkeys(itertools.chain.from_iterable(self._dicts)))
 
-    def __getitem__(self, key: _KT) -> _VT:
+    def __getitem__(self, key: _KT, /) -> _VT:
         if not self._dicts:
             raise IndexError("DictStack stack is empty")
         for scope in reversed(self._dicts):
@@ -115,13 +115,13 @@ class DictStack(MutableMapping[_KT, _VT]):
     def __len__(self) -> int:
         return len(list(iter(self)))
 
-    def __setitem__(self, key: _KT, item: _VT) -> None:
+    def __setitem__(self, key: _KT, item: _VT, /) -> None:
         print(f"DictStack.__setitem__() name: {self._name} key: {key}")
         if not self._dicts:
             raise IndexError("DictStack stack is empty")
         self._dicts[-1][key] = item
 
-    def __delitem__(self, key: _KT) -> None:
+    def __delitem__(self, key: _KT, /) -> None:
         if not self._dicts:
             raise IndexError("DictStack stack is empty")
         del self._dicts[-1][key]

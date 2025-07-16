@@ -22,6 +22,7 @@ from typing import (
 import pdbp
 import rich.repr
 from attrs import define, field
+from dictstack import DictStack
 
 oprint = print
 if not TYPE_CHECKING:
@@ -83,11 +84,13 @@ class ResolvedNamePath:
 class AnnotatedMethodInfo:
     resolved: ResolvedNamePath
     name: str
+    self_namepath: NamePath
     method: MethodType
     etc: dict[Any, Any]
 
     def __rich_repr__(self) -> rich.repr.Result:
         yield "name", self.name
+        yield "self_namepath", self.self_namepath
         yield "etc", self.etc
 
 
@@ -96,6 +99,15 @@ AMIS = cast(AnnotatedMethodInfo, object())
 
 
 class SetOnceDict(dict[_KT, _VT]):
+    def __setitem__(self, key: _KT, value: _VT, /) -> None:
+        if key in self:
+            raise ValueError(
+                f"Key '{key}' already exists. Existing value: {self[key]} New value: {value}"
+            )
+        super().__setitem__(key, value)
+
+
+class SetOnceDictStack(DictStack[_KT, _VT]):
     def __setitem__(self, key: _KT, value: _VT, /) -> None:
         if key in self:
             raise ValueError(
@@ -192,7 +204,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def as_ntuple(self) -> AnnotatedMethodInfo:
         if self._etc is None:
             raise ValueError("self._etc is None")
-        return AnnotatedMethodInfo(self._rnp, self._name, cast(MethodType, self), self._etc)
+        return AnnotatedMethodInfo(
+            self._rnp, self._name, self._self_np, cast(MethodType, self), self._etc
+        )
 
     @property
     def name(self) -> str:
@@ -230,17 +244,22 @@ class GenericTypeRewriter(Generic[_T]):
     _namespaces_ro: ClassVar[MappingProxyType[type, list[AnnotatedMethodInfo]]] = MappingProxyType(
         _namespaces
     )
+    _cls_rewrite_meths: ClassVar[SetOnceDict[NamePath, AnnotatedMethodInfo]]
+    _cls_rewrite_meths_ro: ClassVar[MappingProxyType[NamePath, AnnotatedMethodInfo]]
 
     def __init_subclass__(cls) -> None:
         # TODO: resolve _namespaces into dispatch lookup tables
         # print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls.__dict__}")
         # for u in vars(cls):
         #     print(f"u: {u}")
-        for name, val in vars(cls).items():
+        cls._cls_rewrite_meths = SetOnceDict()
+        cls._cls_rewrite_meths_ro = MappingProxyType(cls._cls_rewrite_meths)
+        for val in vars(cls).values():
             if isinstance(val, AnnotatedMethod):
-                print(
-                    f"is() name: {name} is AnnotatedMethod rewriter NP: {val.self_namepath} type NP: {val.namepath}"
-                )
+                # print(
+                #     f"is() name: {name} is AnnotatedMethod rewriter NP: {val.self_namepath} type NP: {val.namepath}"
+                # )
+                cls._cls_rewrite_meths[val.namepath] = val.as_ntuple()
         # print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
     def _call_annotated_method(
@@ -249,18 +268,28 @@ class GenericTypeRewriter(Generic[_T]):
         m = method_info.method.__get__(self, type(self))  # type: ignore
         return m(*args, **kwargs)
 
+    @classmethod
+    def rewrite_methods(cls) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
+        return cls._cls_rewrite_meths_ro
+
+    @classmethod
+    def rewrite_method_for(cls, namepath: NamePath) -> AnnotatedMethodInfo:
+        mro = inspect.getmro(cls)
+        for mcls in mro:
+            if not issubclass(mcls, GenericTypeRewriter):
+                continue
+            rewriter = mcls.rewrite_methods().get(namepath, None)
+            if rewriter is not None:
+                return rewriter
+        raise KeyError(f"No rewrite method for NP: {namepath} mro: {mro} methods: {cls.registry}")
+
     @property
     def registry(self) -> MappingProxyType[type, list[AnnotatedMethodInfo]]:
         return self._namespaces_ro
 
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
-        rewriters = self._namespaces
-        mro = type(self).mro()
-        for rwcls, rwcls_meth in rewriters.items():
-            print(f"mro: {mro} rwcls: {rwcls} rwcls_meth: {rwcls_meth}")
-
-        rewriter = dict(self.registry).get(namepath, None)  # type: ignore
-        print(f"rewriter: {rewriter}")
+        rewriter = self.rewrite_method_for(namepath)
+        print(f"rewriter: NP: {rewriter.self_namepath} target type NP: {namepath}")
         if rewriter:
             return cast(int, self._call_annotated_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
@@ -272,7 +301,7 @@ class TypeRewriter(GenericTypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}")
-        print(f"TR.type.meta: {meta}\n")
+        # print(f"TR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", {"name": "TR.rewrite_c_ast_Union"})
@@ -280,7 +309,7 @@ class TypeRewriter(GenericTypeRewriter):
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
     ) -> int:
         print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}")
-        print(f"TR.cast.meta: {meta}\n")
+        # print(f"TR.cast.meta: {meta}\n")
         return a * b
 
 
@@ -292,7 +321,7 @@ class MuhrivedTypeRewriter(TypeRewriter):
         print(
             f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"MTR.type.meta: {meta}\n")
+        # print(f"MTR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", {"name": "MTR.der_rewrite_c_ast_Union"})
@@ -302,5 +331,5 @@ class MuhrivedTypeRewriter(TypeRewriter):
         print(
             f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"MTR.cast.meta: {meta}\n")
+        # print(f"MTR.cast.meta: {meta}\n")
         return a * b

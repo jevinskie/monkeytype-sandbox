@@ -43,7 +43,7 @@ class DerivedTypeRewriter(TypeRewriter):
         print(
             f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"DTR.type.meta: {meta}\n")
+        # print(f"DTR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", {"name": "DTR.der_rewrite_c_ast_Union"})
@@ -53,7 +53,7 @@ class DerivedTypeRewriter(TypeRewriter):
         print(
             f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"DTR.cast.meta: {meta}\n")
+        # print(f"DTR.cast.meta: {meta}\n")
         return a * b
 
 
@@ -65,7 +65,7 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         print(
             f"DDTR.dub_rewrite_typing_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"DDTR.type.meta: {meta}\n")
+        # print(f"DDTR.type.meta: {meta}\n")
         return a + b
 
     @rewriter_dec("pycparser.c_ast", "Union", {"name": "DDTR.dub_rewrite_c_ast_Union"})
@@ -75,7 +75,7 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         print(
             f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b} etc: {etc} id(m): {pid(meta)}"
         )
-        print(f"DDTR.cast.meta: {meta}\n")
+        # print(f"DDTR.cast.meta: {meta}\n")
         return a * b
 
 
