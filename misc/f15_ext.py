@@ -11,7 +11,7 @@ from f15 import (
     MuhrivedTypeRewriter,
     NamePath,
     TypeRewriter,
-    rewrite_this,
+    register_rewrite,
 )
 
 if not TYPE_CHECKING:
@@ -33,19 +33,19 @@ else:
 
 
 class DerivedTypeRewriter(TypeRewriter):
-    @rewrite_this("typing", "Union")
+    @register_rewrite("typing", "Union")
     def der_rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"DTR.der_rewrite_typing_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewrite_this("pycparser.c_ast", "Union")
+    @register_rewrite("pycparser.c_ast", "Union")
     def der_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"DTR.der_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
 
 
 class DubDerTypeRewriter(DerivedTypeRewriter, MuhrivedTypeRewriter):
-    @rewrite_this("pycparser.c_ast", "Union")
+    @register_rewrite("pycparser.c_ast", "Union")
     def dub_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"DDTR.dub_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b

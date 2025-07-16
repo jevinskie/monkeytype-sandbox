@@ -164,13 +164,21 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._func
 
     # FIXME: need prototocol to type type[_T] further with these private attrs
-    def __set_name__(self, obj: type[_T], name: str) -> None:
+    def __set_name__(self, new_cls: Any, name: str) -> None:
+        if not isinstance(new_cls, type):
+            raise TypeError("AnnotatedMethod must be a class attribute")
+        if not issubclass(new_cls, GenericTypeRewriter):
+            raise TypeError(
+                f"Can't set descriptor on non-GenericTypeRewriter-derived class: {new_cls}"
+            )
         object.__setattr__(self, "_name", name)
-        object.__setattr__(self, "_self_np", NamePath(obj.__module__, f"{obj.__qualname__}.{name}"))
+        object.__setattr__(
+            self, "_self_np", NamePath(new_cls.__module__, f"{new_cls.__qualname__}.{name}")
+        )
         nt = self.as_ntuple()
-        if obj not in obj._namespaces:
-            obj._namespaces[obj] = []
-        obj._namespaces[obj].append(self)
+        if new_cls not in new_cls._namespaces:
+            new_cls._namespaces[new_cls] = []
+        new_cls._namespaces[new_cls].append(self.as_ntuple())
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
@@ -195,7 +203,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._self_np
 
 
-class rewrite_this:
+class register_rewrite:
     tgt_namepath: NamePath
 
     def __init__(self, tgt_module: str, tgt_qualname: str) -> None:
@@ -203,12 +211,6 @@ class rewrite_this:
 
     def __call__(self, func: _F) -> _F:
         return cast(_F, AnnotatedMethod(func, self.tgt_namepath))
-
-    def __repr__(self) -> str:
-        return f'rewriter_dec("{self.tgt_namepath.module}", "{self.tgt_namepath.qualname}")'
-
-    def __rich_repr__(self) -> rich.repr.Result:
-        yield "tgt_namepath", self.tgt_namepath
 
 
 # TODO: change _cls_rewrite_meths value type to MethodInfo?
@@ -262,24 +264,24 @@ class GenericTypeRewriter(Generic[_T]):
 
 
 class TypeRewriter(GenericTypeRewriter):
-    @rewrite_this("typing", "Union")
+    @register_rewrite("typing", "Union")
     def rewrite_typing_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"TR.rewrite_typing_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewrite_this("pycparser.c_ast", "Union")
+    @register_rewrite("pycparser.c_ast", "Union")
     def rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"TR.rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
 
 
 class MuhrivedTypeRewriter(TypeRewriter):
-    @rewrite_this("construct", "Union")
+    @register_rewrite("construct", "Union")
     def muh_rewrite_construct_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"MTR.muh_rewrite_construct_Union() self: {self} a: {a} b: {b}")
         return a + b
 
-    @rewrite_this("pycparser.c_ast", "Union")
+    @register_rewrite("pycparser.c_ast", "Union")
     def muh_rewrite_c_ast_Union(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"MTR.muh_rewrite_c_ast_Union() self: {self} a: {a} b: {b}")
         return a * b
