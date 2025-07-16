@@ -13,19 +13,14 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
-    Self,
     TypeVar,
     cast,
     overload,
 )
 
 import pdbp
-import rich
-import rich.pretty
 import rich.repr
-import rich.traceback
 from attrs import define, field
-from dictstack import DictStack
 
 oprint = print
 if not TYPE_CHECKING:
@@ -57,10 +52,6 @@ else:
 pdbp  # keep import alive when set_trace() calls are commented out
 copy  # ditto
 sys  # ^
-
-# rich.pretty.install()
-# rich.traceback.install(show_locals=True)
-# traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -101,12 +92,6 @@ AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, object())
 
 
-def dump_stack() -> None:
-    # tb = rich.traceback.Traceback(show_locals=True)
-    # print(tb)
-    pass
-
-
 def dotted_getattr(obj: Any, path: str) -> Any:
     for part in path.split("."):
         obj = getattr(obj, part)
@@ -143,7 +128,6 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], None))
         if self._etc is None:
             object.__setattr__(self, "_etc", {})
-        print(f"AM.__init__() exit self: {pid(self)}")
 
     @overload
     def __get__(self, obj: None, cls: type[_T], /) -> Callable[Concatenate[_T, _P], _R_co]: ...
@@ -170,9 +154,6 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if obj is None:
             raise ValueError(f"None obj? {obj}")
         nt = self.as_ntuple()
-        # dump_stack()
-        # print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
-        obj._infos[self._rnp.namepath] = nt
         if obj not in obj._namespaces:
             obj._namespaces[obj] = []
         obj._namespaces[obj].append(self)
@@ -202,47 +183,16 @@ class rewriter_dec:
 
 
 class GenericTypeRewriter(Generic[_T]):
-    print("_infos() psdo-init GTR._infos in GTR body")
-    print("_infos() real-init GTR._infos in GTR body")
-    _infos: DictStack[NamePath, AnnotatedMethodInfo] = DictStack(name="GTRRoot")
-    _infos.pushdict()
-    _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
     _namespaces: ClassVar[dict[type, list[AnnotatedMethodInfo]]] = {}
-
-    # def __new__(cls) -> Self:
-    #     raise RuntimeError("ffff")
-    #     print(f"GTR.__new__() entry cls: {pid(cls)} {cls}")
-    #     new_cls = super().__new__(cls)
-    #     print("_infos() psdo-init GTR._infos in GTR.__new__")
-    #     # if not hasattr(new_cls, "_infos"):
-    #     #     print("_infos() real-init GTR._infos in GTR.__new__")
-    #     #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-    #     #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
-    #     print(f"GTR.__new__() exit cls: {pid(cls)} {cls}")
-    #     return new_cls
-
-    def __new__(cls) -> Self:
-        print(f"GenericTypeRewriter.__new__() entry cls: {cls}")
-        r = super().__new__(cls)
-        print(f"GenericTypeRewriter.__new__() entry cls: {cls} res: {r}")
-        return r
+    _namespaces_ro: ClassVar[MappingProxyType[type, list[AnnotatedMethodInfo]]] = MappingProxyType(
+        _namespaces
+    )
 
     def __init__(self) -> None:
-        # pdbp.set_trace()
-        print(f"GTR.__init__() entry self: {pid(self)} {self}")
         super().__init__()
-        self._infos_ro = self._infos.mapping
-        print(f"GTR.__init__() exit self: {pid(self)} {self}")
 
     def __init_subclass__(cls) -> None:
         print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls}")
-        print("pushdict")
-        setattr(
-            cls,
-            "_infos",
-            DictStack([copy(d) for d in getattr(cls, "_infos").dicts], name=cls.__name__),
-        )
-        getattr(cls, "_infos").pushdict()
         print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
     def _call_annotated_method(
@@ -252,38 +202,18 @@ class GenericTypeRewriter(Generic[_T]):
         return m(*args, **kwargs)
 
     @property
-    def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
-        return self._infos_ro
+    def registry(self) -> MappingProxyType[type, list[AnnotatedMethodInfo]]:
+        return self._namespaces_ro
 
     def rewrite_type(self, namepath: NamePath, a: int, b: int) -> int:
-        rewriter = self.registry.get(namepath)
+        rewriter = dict(self.registry).get(namepath, None)  # type: ignore
         print(f"rewriter: {rewriter}")
         if rewriter:
             return cast(int, self._call_annotated_method(rewriter, a, b))
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
 
-# print("_infos() psdo-init GTR._infos in top level")
-# if not hasattr(GenericTypeRewriter, "_infos"):
-#     print("_infos() real-init GTR._infos in top level")
-#     setattr(GenericTypeRewriter, "_infos", DictStack(name="GTRRoot"))
-#     getattr(GenericTypeRewriter, "_infos").pushdict()
-print(
-    f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
-)
-
-# print("DictStack.all_instances()")
-# rich.pretty.pprint(DictStack.all_instances())
-# rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
-
-
 class TypeRewriter(GenericTypeRewriter):
-    def __new__(cls) -> Self:
-        print(f"TypeRewriter.__new__() entry cls: {cls}")
-        r = super().__new__(cls)
-        print(f"TypeRewriter.__new__() entry cls: {cls} res: {r}")
-        return r
-
     @rewriter_dec("typing", "Union", {"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
@@ -301,16 +231,7 @@ class TypeRewriter(GenericTypeRewriter):
         return a * b
 
 
-print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRewriter._infos)}")
-
-
 class MuhrivedTypeRewriter(TypeRewriter):
-    def __new__(cls) -> Self:
-        print(f"MuhrivedTypeRewriter.__new__() entry cls: {cls}")
-        r = super().__new__(cls)
-        print(f"MuhrivedTypeRewriter.__new__() entry cls: {cls} res: {r}")
-        return r
-
     @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
     def muh_rewrite_construct_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
@@ -330,15 +251,3 @@ class MuhrivedTypeRewriter(TypeRewriter):
         )
         print(f"MTR.cast.meta: {meta}\n")
         return a * b
-
-
-print(
-    f"MuhrivedTypeRewriter: {MuhrivedTypeRewriter} id: {pid(MuhrivedTypeRewriter)} infos: {list(MuhrivedTypeRewriter._infos)}"
-)
-
-
-# print("DictStack.all_instances()")
-# rich.pretty.pprint(DictStack.all_instances())
-# rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
-
-mtr = MuhrivedTypeRewriter()

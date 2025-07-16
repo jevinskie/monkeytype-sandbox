@@ -31,13 +31,6 @@ if not TYPE_CHECKING:
         def rinspect(*args: Any, **kwargs: Any) -> None:
             print(*args)
 
-    try:
-        from rich.pretty import install as __rpinstall
-
-        print("f15_ext.py rich.pretty.install()")
-        __rpinstall()
-    except ImportError:
-        pass
 else:
 
     def rinspect(*args: Any, **kwargs: Any) -> None: ...
@@ -65,11 +58,6 @@ class DerivedTypeRewriter(TypeRewriter):
         return a * b
 
 
-print(
-    f"DerivedTypeRewriter: {DerivedTypeRewriter} id: {pid(DerivedTypeRewriter)} infos: {list(DerivedTypeRewriter._infos)}"
-)
-
-
 class DubDerTypeRewriter(DerivedTypeRewriter):
     @rewriter_dec("typing", "Union", {"name": "DDTR.dub_rewrite_typing_Union"})
     def dub_rewrite_typing_Union(
@@ -91,10 +79,6 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
         print(f"DDTR.cast.meta: {meta}\n")
         return a * b
 
-
-print(
-    f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {pid(DubDerTypeRewriter)} infos: {list(DubDerTypeRewriter._infos)}"
-)
 
 print("GenericTypeRewriter._namespaces")
 rich.pretty.pprint(GenericTypeRewriter._namespaces)
@@ -138,29 +122,3 @@ if __name__ == "__main__":
     print(f"rw_ddty c_ast.Union: 100, 200: {ddtr.rewrite_type(np_c, 600_000, 600_000)}")
 
     print("\n" * 5)
-
-    print("tr() dicts:")
-    dict_id_str = " ".join([f"{pid(p)}" for p in tr._infos.dicts])
-    print(f"d*: {dict_id_str}")
-    print(tr._infos.dicts)
-
-    print("\n" * 3)
-
-    print("dtr() dicts:")
-    dict_id_str = " ".join([f"{pid(p)}" for p in dtr._infos.dicts])
-    print(f"d*: {dict_id_str}")
-    print(dtr._infos.dicts)
-
-    print("\n" * 3)
-
-    print("mtr() dicts:")
-    dict_id_str = " ".join([f"{pid(p)}" for p in mtr._infos.dicts])
-    print(f"d*: {dict_id_str}")
-    print(mtr._infos.dicts)
-
-    print("\n" * 3)
-
-    print("ddtr() dicts:")
-    dict_id_str = " ".join([f"{pid(p)}" for p in ddtr._infos.dicts])
-    print(f"d*: {dict_id_str}")
-    print(ddtr._infos.dicts)
