@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib
 import sys
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from copy import copy
 from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
@@ -199,107 +199,6 @@ class rewriter_dec:
         return cast(_F, AnnotatedMethod(func, self._np, self._etcz))
 
 
-class GenericTypeRewriterMetaInner(type):
-    def __new__(
-        cls, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
-    ) -> GenericTypeRewriterMetaInner:
-        print(f"GTRMI.__new__() entry name: {name} cls: {pid(cls)} {cls}")
-        # ic("GTRMI.__init__" and pid(cls))
-        # print(f"GTRMI.__new__ pre-super name: {name} cls: {cls} bases: {bases} ns: {namespace}")
-        # print("_infos() psdo-init GTR._infos in GTRMI.__new__ pre-super")
-        if "_infos" not in namespace:
-            # dump_stack()
-            print("_infos() real-init GTR._infos in GTRMI.__new__ pre-super")
-            namespace["_infos"] = DictStack(list((dict(),)))
-        # print("pushdict")
-        # namespace["_infos"] = copy(namespace["_infos"])
-        # namespace["_infos"].pushdict()
-        new_cls = super().__new__(cls, name, bases, namespace)
-        # print("_infos() psdo-init GTR._infos in GTRMI.__new__ post-super")
-        # if not hasattr(new_cls, "_infos"):
-        #     print("_infos() real-init GTR._infos in GTRMI.__new__ post-super")
-        #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-        # dump_stack()
-        # print("pushdict")
-        # setattr(new_cls, "_infos", copy(getattr(new_cls, "_infos")))
-        # getattr(new_cls, "_infos").pushdict()
-        # print(
-        #     f"GTRMI.__new__ post-super cls: {cls} new_cls: {new_cls} cid: {pid(cls)} ncid: {pid(new_cls)}"
-        # )
-        print(
-            f"GTRMI.__new__() exit name: {name} cls: {pid(cls)} new_cls: {pid(new_cls)} {cls} | {new_cls}"
-        )
-        return new_cls
-
-    def __init__(
-        self, name: str, bases: tuple[type, ...], namespace: dict[str, Any], /, **kwds: Any
-    ) -> None:
-        print(f"GTRMI.__init__() enter name: {name} self: {pid(self)}")
-        # print(
-        #     f"GTRMI.__init__ sid: {pid(self)} self: {self} name: {name} ns: {namespace} kw: {kwds}"
-        # )
-        # pdbp.set_trace()
-        # print("_infos() psdo-init GTR._infos in GTRMI.__init__ pre-super")
-        # if "_infos" not in namespace:
-        #     print("_infos() real-init GTR._infos in GTRMI.__init__ pre-super")
-        #     namespace["_infos"] =  DictStack(list((dict(),)))
-        # print("pushdict")
-        # namespace["_infos"] = copy(namespace["_infos"])
-        # namespace["_infos"].pushdict()
-        # print(f"GTRMI.__init__ pre-super self: {self} id: {pid(self)}")
-        super().__init__(name, bases, namespace)
-        # print("_infos() psdo-init GTR._infos in GTRMI.__init__ post-super")
-        # if "_infos" not in namespace:
-        #     print("_infos() real-init GTR._infos in GTRMI.__init__ post-super")
-        #     namespace["_infos"] =  DictStack(list((dict(),)))
-        # print("pushdict")
-        # namespace["_infos"] = copy(namespace["_infos"])
-        # namespace["_infos"].pushdict()
-        # setattr(self, "_infos", copy(getattr(self, "_infos")))
-        # getattr(self, "_infos").pushdict()
-        # print(f"GTRMI.__init__ post-super self: {self} id: {pid(self)}")
-        print(f"GTRMI.__init__() exit name: {name} self: {pid(self)}")
-
-    def __init_subclass__(cls) -> None:
-        print(f"GTRMI.__init_subclass__(): {cls}")
-
-    @classmethod
-    def __prepare__(
-        metacls, name: str, bases: tuple[type, ...], /, **kwds: Any
-    ) -> MutableMapping[str, object]:
-        print(
-            f"GTRMI.__prepare__() entry metacls: {pid(metacls)} {metacls} name: {name} bases: {bases} kw: {kwds}"
-        )
-        r = super().__prepare__(name, bases, **kwds)
-        print(f"GTRMI.__prepare__() exit result: {pid(r)} {r}")
-        return r
-
-
-# class GenericTypeRewriterMeta(ABCMeta, GenericTypeRewriterMetaInner):
-#     pass
-
-
-# class class_dec:
-#     def __init__(self, *args, **kwargs) -> None:
-#         print(f"class_dec.__init__() entry args: {args} kw: {kwargs}")
-#         super().__init__(*args, **kwargs)
-#         print(f"class_dec.__init__() exit: self: {pid(self)} {self}")
-
-#     def __call__(self, *args: Any, **kwds: Any) -> Any:
-#         print(f"class_dec.__call__() entry args: {args} kw: {kwds}")
-#         r = args[0]
-#         print(f"class_dec.__call__() exit res: {r}")
-#         return r
-
-
-def class_dec(cls: type[Any]):
-    oprint(f"class_dec() cls: {cls} dir(cls): {dir(cls)}")
-    # rich.pretty.pprint(cls)
-    # rinspect(cls)
-    return cls
-
-
-@class_dec
 class GenericTypeRewriter(Generic[_T]):
     print("_infos() psdo-init GTR._infos in GTR body")
     print("_infos() real-init GTR._infos in GTR body")
@@ -376,7 +275,6 @@ print(
 # rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
 
 
-@class_dec
 class TypeRewriter(GenericTypeRewriter):
     def __new__(cls) -> Self:
         print(f"TypeRewriter.__new__() entry cls: {cls}")
@@ -404,7 +302,6 @@ class TypeRewriter(GenericTypeRewriter):
 print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRewriter._infos)}")
 
 
-@class_dec
 class MuhrivedTypeRewriter(TypeRewriter):
     def __new__(cls) -> Self:
         print(f"MuhrivedTypeRewriter.__new__() entry cls: {cls}")
