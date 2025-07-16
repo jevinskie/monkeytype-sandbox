@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -84,12 +83,13 @@ print("GenericTypeRewriter._namespaces")
 rich.pretty.pprint(GenericTypeRewriter._namespaces)
 
 if __name__ == "__main__":
-    sys.exit()
+    # sys.exit()
     np_t = NamePath("typing", "Union")
     np_c = NamePath("pycparser.c_ast", "Union")
     np_s = NamePath("construct", "Union")
     print(f"np_t: {np_t}")
     print(f"np_c: {np_c}")
+    print(f"np_s: {np_s}")
 
     print("\n" * 3)
 
@@ -108,8 +108,8 @@ if __name__ == "__main__":
     print("\n" * 7)
 
     mtr = MuhrivedTypeRewriter()
-    # print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
-    # print("\n" * 1)
+    print(f"rw_mty typing.Union: 10, 20: {mtr.rewrite_type(np_t, 50, 50)}")
+    print("\n" * 1)
     print(f"rw_mty c_ast.Union: 100, 200: {mtr.rewrite_type(np_c, 500_000, 500_000)}")
     print("\n" * 1)
     print(f"rw_mty construct.Union: 10, 20: {mtr.rewrite_type(np_s, 400_000, 400_000)}")
