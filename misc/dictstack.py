@@ -1,20 +1,12 @@
 from __future__ import annotations
 
 import itertools
-import traceback
 from collections.abc import Iterable, Iterator, MutableMapping
 from copy import copy
 from types import MappingProxyType
-from typing import ClassVar, TypeVar
+from typing import TypeVar
 
-import rich
-import rich.pretty
 import rich.repr
-import rich.traceback
-
-rich.pretty.install()
-rich.traceback.install(show_locals=True)
-traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
@@ -80,19 +72,18 @@ class DictStack(MutableMapping[_KT, _VT]):
     {'a': 1}
     """
 
-    _dicts: list[MutableMapping[_KT, _VT]]
-    _all_instances: ClassVar[list[DictStack]] = []
     _name: str | None
+    _dicts: list[MutableMapping[_KT, _VT]]
 
     def __init__(
         self, dicts: Iterable[MutableMapping[_KT, _VT]] | None = None, name: str | None = None
     ) -> None:
-        # traceback.print_stack()
         self._name = name
         self._dicts = list(dicts) if dicts is not None else []
-        DictStack._all_instances.append(self)
-        print("DictStack.__init__() all_instances:")
-        rich.pretty.pprint(DictStack._all_instances)
+
+    @property
+    def name(self) -> str | None:
+        return self._name
 
     @property
     def dicts(self) -> list[MutableMapping[_KT, _VT]]:
@@ -142,13 +133,3 @@ class DictStack(MutableMapping[_KT, _VT]):
         yield "name", self._name
         yield "id", id(self)
         yield "keys", list(dict(self).keys())
-
-    @property
-    def name(self) -> str:
-        if self._name is None:
-            raise ValueError(f"DictStack name is none self: {self}")
-        return self._name
-
-    @staticmethod
-    def all_instances() -> list[DictStack]:
-        return DictStack._all_instances

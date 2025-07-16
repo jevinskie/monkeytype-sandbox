@@ -7,7 +7,6 @@ from typing import (
 )
 
 import rich.pretty
-from dictstack import DictStack
 from f15 import (
     AMI,
     AMIS,
@@ -96,12 +95,6 @@ class DubDerTypeRewriter(DerivedTypeRewriter):
 print(
     f"DubDerTypeRewriter: {DubDerTypeRewriter} id: {pid(DubDerTypeRewriter)} infos: {list(DubDerTypeRewriter._infos)}"
 )
-
-
-print("DictStack.all_instances()")
-rich.pretty.pprint(DictStack.all_instances())
-rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
-rich.pretty.pprint([dict(ds) for ds in DictStack.all_instances()])
 
 print("GenericTypeRewriter._namespaces")
 rich.pretty.pprint(GenericTypeRewriter._namespaces)
