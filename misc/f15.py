@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import sys
 from collections.abc import Callable
 from copy import copy
@@ -98,12 +99,25 @@ class SetOnceDict(dict[_KT, _VT]):
     def __setitem__(self, key: _KT, value: _VT, /) -> None:
         if key in self:
             raise ValueError(
-                f"Key '{key}' already exists. Existing key: {key} value: {self[key]} new value: {value}"
+                f"Key '{key}' already exists. Existing value: {self[key]} New value: {value}"
             )
         super().__setitem__(key, value)
 
 
 def dotted_getattr(obj: Any, path: str) -> Any:
+    for part in path.split("."):
+        obj = getattr(obj, part)
+    return obj
+
+
+def mro_getattr(obj: Any, path: str) -> Any:
+    inspect.getmro(type(obj))
+    for part in path.split("."):
+        obj = getattr(obj, part)
+    return obj
+
+
+def dotted_mro_getattr(obj: Any, path: str) -> Any:
     for part in path.split("."):
         obj = getattr(obj, part)
     return obj
@@ -131,6 +145,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _name: str = field(init=False)
     _rnp: ResolvedNamePath = field(init=False)
     _fmeta: Callable[Concatenate[_T, _P], _R_co] = field(init=False)
+    _self_np: NamePath = field(init=False)
 
     # FIXME: Need weakref?
 
@@ -159,11 +174,12 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def __wrapped__(self) -> Callable[Concatenate[_T, _P], _R_co]:
         return self._func
 
-    def __set_name__(self, obj: Any, name: str) -> None:
-        print(f"AM.__set_name__() entry name: {name} self: {self} sid: {pid(self)} oid: {pid(obj)}")
-        object.__setattr__(self, "_name", name)
+    def __set_name__(self, obj: type[_T], name: str) -> None:
+        # print(f"AM.__set_name__() entry name: {name} self: {self} sid: {pid(self)} oid: {pid(obj)}")
         if obj is None:
             raise ValueError(f"None obj? {obj}")
+        object.__setattr__(self, "_name", name)
+        object.__setattr__(self, "_self_np", NamePath(obj.__module__, f"{obj.__qualname__}.{name}"))
         nt = self.as_ntuple()
         if obj not in obj._namespaces:
             obj._namespaces[obj] = []
@@ -171,12 +187,28 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
-        print(f"AM.__set_name__() exit name: {name} self: {pid(self)} obj: {pid(self)}")
+        # print(f"AM.__set_name__() exit name: {name} self: {pid(self)} obj: {pid(self)}")
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
         if self._etc is None:
             raise ValueError("self._etc is None")
         return AnnotatedMethodInfo(self._rnp, self._name, cast(MethodType, self), self._etc)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def namepath(self) -> NamePath:
+        return self._namepath
+
+    @property
+    def resolved_namepath(self) -> ResolvedNamePath:
+        return self._rnp
+
+    @property
+    def self_namepath(self) -> NamePath:
+        return self._self_np
 
 
 @define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
@@ -199,13 +231,17 @@ class GenericTypeRewriter(Generic[_T]):
         _namespaces
     )
 
-    def __init__(self) -> None:
-        super().__init__()
-
     def __init_subclass__(cls) -> None:
         # TODO: resolve _namespaces into dispatch lookup tables
-        print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls}")
-        print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
+        # print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls.__dict__}")
+        # for u in vars(cls):
+        #     print(f"u: {u}")
+        for name, val in vars(cls).items():
+            if isinstance(val, AnnotatedMethod):
+                print(
+                    f"is() name: {name} is AnnotatedMethod rewriter NP: {val.self_namepath} type NP: {val.namepath}"
+                )
+        # print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
     def _call_annotated_method(
         self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
