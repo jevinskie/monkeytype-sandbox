@@ -54,6 +54,8 @@ copy  # ditto
 sys  # ^
 
 _T = TypeVar("_T")
+_KT = TypeVar("_KT")
+_VT = TypeVar("_VT")
 _F = TypeVar("_F", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R_co = TypeVar("_R_co", covariant=True)
@@ -90,6 +92,15 @@ class AnnotatedMethodInfo:
 
 AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, object())
+
+
+class SetOnceDict(dict[_KT, _VT]):
+    def __setitem__(self, key: _KT, value: _VT, /) -> None:
+        if key in self:
+            raise ValueError(
+                f"Key '{key}' already exists. Existing key: {key} value: {self[key]} new value: {value}"
+            )
+        super().__setitem__(key, value)
 
 
 def dotted_getattr(obj: Any, path: str) -> Any:
@@ -183,7 +194,7 @@ class rewriter_dec:
 
 
 class GenericTypeRewriter(Generic[_T]):
-    _namespaces: ClassVar[dict[type, list[AnnotatedMethodInfo]]] = {}
+    _namespaces: ClassVar[SetOnceDict[type, list[AnnotatedMethodInfo]]] = SetOnceDict()
     _namespaces_ro: ClassVar[MappingProxyType[type, list[AnnotatedMethodInfo]]] = MappingProxyType(
         _namespaces
     )
@@ -192,6 +203,7 @@ class GenericTypeRewriter(Generic[_T]):
         super().__init__()
 
     def __init_subclass__(cls) -> None:
+        # TODO: resolve _namespaces into dispatch lookup tables
         print(f"GTR.__init_subclass__() entry cls: {pid(cls)} {cls}")
         print(f"GTR.__init_subclass__() exit cls: {pid(cls)} {cls}")
 
