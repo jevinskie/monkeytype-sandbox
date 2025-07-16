@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys as sys
+import traceback
 import types
 from typing import Any, cast
 
@@ -8,6 +9,7 @@ from rich import print
 
 print("f18_ext mod top level")
 
+traceback  # don't eliminate import
 
 # TODO: Add lambas
 # TODO: Add generators? ugh
@@ -65,13 +67,22 @@ class FE:
                 class FEIY(DummyRewriter):
                     def foo(self):
                         def bar(arg):
-                            # traceback.print_stack()
+                            traceback.print_stack()
                             return ("flag", sys._getframe(), arg)
 
                         def bar_wrapper():
                             return bar((sys._getframe(), bar_wrapper, bar))
 
                         return [bar_wrapper, bar_wrapper(), sys._getframe(), None]
+
+                    @staticmethod
+                    def what():
+                        print(FEIX.FEIY.foo)
+                        print(FEIX.FEIY)
+                        print(FEIX)
+                        print(FE.FEI)
+
+                    what()
 
             return FEIX.FEIY()
 
