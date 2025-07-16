@@ -305,6 +305,7 @@ class GenericTypeRewriter(Generic[_T]):
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __new__(cls) -> Self:
+        raise RuntimeError("ffff")
         print(f"GTR.__new__() entry cls: {pid(cls)} {cls}")
         new_cls = super().__new__(cls)
         print("_infos() psdo-init GTR._infos in GTR.__new__")
@@ -367,6 +368,9 @@ print(
 
 @class_dec
 class TypeRewriter(GenericTypeRewriter):
+    def __new__(cls) -> Self:
+        raise RuntimeError("ffff")
+
     @rewriter_dec("typing", "Union", {"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
@@ -389,6 +393,9 @@ print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRe
 
 @class_dec
 class MuhrivedTypeRewriter(TypeRewriter):
+    def __new__(cls) -> Self:
+        raise RuntimeError("ffff")
+
     @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
     def muh_rewrite_construct_Union(
         self, a: int, b: int, /, meta: AMI = AMIS, etc: dict[Any, Any] | None = None
