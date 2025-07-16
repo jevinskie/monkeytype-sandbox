@@ -304,17 +304,23 @@ class GenericTypeRewriter(Generic[_T]):
     _infos.pushdict()
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
+    # def __new__(cls) -> Self:
+    #     raise RuntimeError("ffff")
+    #     print(f"GTR.__new__() entry cls: {pid(cls)} {cls}")
+    #     new_cls = super().__new__(cls)
+    #     print("_infos() psdo-init GTR._infos in GTR.__new__")
+    #     # if not hasattr(new_cls, "_infos"):
+    #     #     print("_infos() real-init GTR._infos in GTR.__new__")
+    #     #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
+    #     #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
+    #     print(f"GTR.__new__() exit cls: {pid(cls)} {cls}")
+    #     return new_cls
+
     def __new__(cls) -> Self:
-        raise RuntimeError("ffff")
-        print(f"GTR.__new__() entry cls: {pid(cls)} {cls}")
-        new_cls = super().__new__(cls)
-        print("_infos() psdo-init GTR._infos in GTR.__new__")
-        # if not hasattr(new_cls, "_infos"):
-        #     print("_infos() real-init GTR._infos in GTR.__new__")
-        #     setattr(new_cls, "_infos", DictStack(list((dict(),))))
-        #     new_cls._infos = DictStack(list((dict(),)))  # type: ignore
-        print(f"GTR.__new__() exit cls: {pid(cls)} {cls}")
-        return new_cls
+        print(f"GenericTypeRewriter.__new__() entry cls: {cls}")
+        r = super().__new__(cls)
+        print(f"GenericTypeRewriter.__new__() entry cls: {cls} res: {r}")
+        return r
 
     def __init__(self) -> None:
         # pdbp.set_trace()
@@ -369,7 +375,10 @@ print(
 @class_dec
 class TypeRewriter(GenericTypeRewriter):
     def __new__(cls) -> Self:
-        raise RuntimeError("ffff")
+        print(f"TypeRewriter.__new__() entry cls: {cls}")
+        r = super().__new__(cls)
+        print(f"TypeRewriter.__new__() entry cls: {cls} res: {r}")
+        return r
 
     @rewriter_dec("typing", "Union", {"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
@@ -394,7 +403,10 @@ print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRe
 @class_dec
 class MuhrivedTypeRewriter(TypeRewriter):
     def __new__(cls) -> Self:
-        raise RuntimeError("ffff")
+        print(f"MuhrivedTypeRewriter.__new__() entry cls: {cls}")
+        r = super().__new__(cls)
+        print(f"MuhrivedTypeRewriter.__new__() entry cls: {cls} res: {r}")
+        return r
 
     @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
     def muh_rewrite_construct_Union(
@@ -425,3 +437,5 @@ print(
 # print("DictStack.all_instances()")
 # rich.pretty.pprint(DictStack.all_instances())
 # rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
+
+mtr = MuhrivedTypeRewriter()
