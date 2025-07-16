@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 import sys
-import traceback
 from collections.abc import Callable, MutableMapping
 from copy import copy
 from functools import partial
@@ -27,6 +26,7 @@ import rich.traceback
 from attrs import define, field
 from dictstack import DictStack
 
+oprint = print
 if not TYPE_CHECKING:
     try:
         from rich import print
@@ -43,8 +43,9 @@ if not TYPE_CHECKING:
     try:
         from rich.pretty import install as __rpinstall
 
-        print("f15.py rich.pretty.install()")
-        __rpinstall()
+        # print("f15.py rich.pretty.install()")
+        # __rpinstall()
+        __rpinstall
     except ImportError:
         pass
 else:
@@ -56,9 +57,9 @@ pdbp  # keep import alive when set_trace() calls are commented out
 copy  # ditto
 sys  # ^
 
-rich.pretty.install()
-rich.traceback.install(show_locals=True)
-traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
+# rich.pretty.install()
+# rich.traceback.install(show_locals=True)
+# traceback.print_stack.__globals__["__builtins__"]["print"] = rich.print
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
@@ -275,22 +276,32 @@ class GenericTypeRewriterMetaInner(type):
 #     pass
 
 
-class class_dec:
-    def __init__(self, *args, **kwargs) -> None:
-        print(f"class_dec.__init__() entry args: {args} kw: {kwargs}")
-        super().__init__(*args, **kwargs)
-        print(f"class_dec.__init__() exit: self: {pid(self)} {self}")
+# class class_dec:
+#     def __init__(self, *args, **kwargs) -> None:
+#         print(f"class_dec.__init__() entry args: {args} kw: {kwargs}")
+#         super().__init__(*args, **kwargs)
+#         print(f"class_dec.__init__() exit: self: {pid(self)} {self}")
 
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
-        print(f"class_dec.__call__() entry args: {args} kw: {kwds}")
-        r = args[0]
-        print(f"class_dec.__call__() exit res: {r}")
-        return r
+#     def __call__(self, *args: Any, **kwds: Any) -> Any:
+#         print(f"class_dec.__call__() entry args: {args} kw: {kwds}")
+#         r = args[0]
+#         print(f"class_dec.__call__() exit res: {r}")
+#         return r
 
 
-@class_dec()
+def class_dec(cls: type[Any]):
+    oprint(f"class_dec() cls: {cls} dir(cls): {dir(cls)}")
+    # rich.pretty.pprint(cls)
+    # rinspect(cls)
+    return cls
+
+
+@class_dec
 class GenericTypeRewriter(Generic[_T]):
-    _infos: DictStack[NamePath, AnnotatedMethodInfo]
+    print("_infos() psdo-init GTR._infos in GTR body")
+    print("_infos() real-init GTR._infos in GTR body")
+    _infos: DictStack[NamePath, AnnotatedMethodInfo] = DictStack(name="GTRRoot")
+    _infos.pushdict()
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __new__(cls) -> Self:
@@ -340,11 +351,11 @@ class GenericTypeRewriter(Generic[_T]):
         raise KeyError(f"couldn't get key for namepath: {namepath}")
 
 
-print("_infos() psdo-init GTR._infos in top level")
-if not hasattr(GenericTypeRewriter, "_infos"):
-    print("_infos() real-init GTR._infos in top level")
-    setattr(GenericTypeRewriter, "_infos", DictStack(name="GTRRoot"))
-    GenericTypeRewriter._infos.pushdict()
+# print("_infos() psdo-init GTR._infos in top level")
+# if not hasattr(GenericTypeRewriter, "_infos"):
+#     print("_infos() real-init GTR._infos in top level")
+#     setattr(GenericTypeRewriter, "_infos", DictStack(name="GTRRoot"))
+#     getattr(GenericTypeRewriter, "_infos").pushdict()
 print(
     f"GenericTypeRewriter: {GenericTypeRewriter} id: {pid(GenericTypeRewriter)} infos: {list(GenericTypeRewriter._infos)}"
 )
@@ -354,6 +365,7 @@ print(
 # rich.pretty.pprint([ds._dicts for ds in DictStack.all_instances()])
 
 
+@class_dec
 class TypeRewriter(GenericTypeRewriter):
     @rewriter_dec("typing", "Union", {"name": "TR.rewrite_typing_Union"})
     def rewrite_typing_Union(
@@ -375,6 +387,7 @@ class TypeRewriter(GenericTypeRewriter):
 print(f"TypeRewriter: {TypeRewriter} id: {pid(TypeRewriter)} infos: {list(TypeRewriter._infos)}")
 
 
+@class_dec
 class MuhrivedTypeRewriter(TypeRewriter):
     @rewriter_dec("construct", "Union", {"name": "MTR.muh_rewrite_construct_Union"})
     def muh_rewrite_construct_Union(
