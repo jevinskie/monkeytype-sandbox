@@ -77,10 +77,11 @@ class FE:
 
                     @staticmethod
                     def what():
-                        print(FEIX.FEIY.foo)
-                        print(FEIX.FEIY)
-                        print(FEIX)
-                        print(FE.FEI)
+                        # print(FEIX.FEIY.foo)
+                        # print(FEIX.FEIY)
+                        # print(FEIX)
+                        # print(FE.FEI)
+                        pass
 
                     what()
 
