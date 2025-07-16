@@ -141,7 +141,7 @@ class DictStack(MutableMapping[_KT, _VT]):
     def __rich_repr__(self) -> rich.repr.Result:
         yield "name", self._name
         yield "id", id(self)
-        yield "keys", dict(self).keys()
+        yield "keys", list(dict(self).keys())
 
     @property
     def name(self) -> str:
