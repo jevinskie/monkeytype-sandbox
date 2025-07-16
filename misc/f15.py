@@ -165,7 +165,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return self._func
 
     def __set_name__(self, obj: Any, name: str) -> None:
-        print(f"AM.__set_name__() entry name: {name} sid: {pid(self)} oid: {pid(obj)}")
+        print(f"AM.__set_name__() entry name: {name} self: {self} sid: {pid(self)} oid: {pid(obj)}")
         object.__setattr__(self, "_name", name)
         if obj is None:
             raise ValueError(f"None obj? {obj}")
@@ -173,7 +173,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         # dump_stack()
         # print(f"AM.__set_name__() obj._infos assignment obj._infos.dicts: {obj._infos.dicts}")
         obj._infos[self._rnp.namepath] = nt
-        obj._namespaces[self._func] = nt
+        if obj not in obj._namespaces:
+            obj._namespaces[obj] = []
+        obj._namespaces[obj].append(self)
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = partial(self._func, meta=nt, etc=self._etc)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
@@ -205,7 +207,7 @@ class GenericTypeRewriter(Generic[_T]):
     _infos: DictStack[NamePath, AnnotatedMethodInfo] = DictStack(name="GTRRoot")
     _infos.pushdict()
     _infos_ro: MappingProxyType[NamePath, AnnotatedMethodInfo]
-    _namespaces: ClassVar[dict[Any, AnnotatedMethodInfo]] = {}
+    _namespaces: ClassVar[dict[type, list[AnnotatedMethodInfo]]] = {}
 
     # def __new__(cls) -> Self:
     #     raise RuntimeError("ffff")
