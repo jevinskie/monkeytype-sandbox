@@ -1,11 +1,9 @@
 from __future__ import annotations
 
+import functools
 import importlib
-import sys
-from collections.abc import Callable
-from copy import copy
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from functools import partial
 from types import MappingProxyType, MethodType, ModuleType
 from typing import (
     TYPE_CHECKING,
@@ -14,24 +12,15 @@ from typing import (
     Concatenate,
     Generic,
     ParamSpec,
+    Protocol,
     TypeVar,
     cast,
     overload,
 )
 
-import pdbp
-
-try:
-    import rich.repr
-except ImportError:
-    pass
-
-
-oprint = print
 if not TYPE_CHECKING:
     try:
         from rich import print
-        # pass
     except ImportError:
         pass
     try:
@@ -42,21 +31,15 @@ if not TYPE_CHECKING:
             print(*args)
 
     try:
-        from rich.pretty import install as __rpinstall
-
-        # print("f15.py rich.pretty.install()")
-        # __rpinstall()
-        __rpinstall
+        from rich.repr import RichReprResult
     except ImportError:
         pass
 else:
 
     def rinspect(*args: Any, **kwargs: Any) -> None: ...
 
+    RichReprResult = Iterable[Any | tuple[Any] | tuple[str, Any] | tuple[str, Any, Any]]
 
-pdbp  # keep import alive when set_trace() calls are commented out
-copy  # ditto
-sys  # ^
 
 _T = TypeVar("_T")
 _KT = TypeVar("_KT")
@@ -93,13 +76,20 @@ class AnnotatedMethodInfo:
     def __repr__(self) -> str:
         return f'<AnnotatedMethodInfo name="{self.name}" self_namepath={self.self_namepath}>'
 
-    def __rich_repr__(self) -> rich.repr.Result:
+    def __rich_repr__(self) -> RichReprResult:
         yield "name", self.name
         yield "self_namepath", self.self_namepath
 
 
 AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, object())  # sentinel default object for meta kwarg
+
+
+class AnnotatedMethodOwner(Protocol):
+    _namespaces: ClassVar[SetOnceDict[type, list[AnnotatedMethodInfo]]]
+    _namespaces_ro: ClassVar[MappingProxyType[type, list[AnnotatedMethodInfo]]]
+    _cls_rewrite_meths: ClassVar[SetOnceDict[NamePath, AnnotatedMethodInfo]]
+    _cls_rewrite_meths_ro: ClassVar[MappingProxyType[NamePath, AnnotatedMethodInfo]]
 
 
 class SetOnceDict(dict[_KT, _VT]):
@@ -155,7 +145,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         if obj is None:
             return self._fmeta
-        p = partial(self._func.__get__(obj, cls), meta=self.as_ntuple())
+        p = functools.partial(self._func.__get__(obj, cls), meta=self.as_ntuple())
         return cast(Callable[_P, _R_co], p)
 
     def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
@@ -182,7 +172,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
             new_cls._namespaces[new_cls] = []
         new_cls._namespaces[new_cls].append(self.as_ntuple())
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
-        p = partial(self._func, meta=nt)  # type: ignore
+        p = functools.partial(self._func, meta=nt)  # type: ignore
         object.__setattr__(self, "_fmeta", cast(Callable[Concatenate[_T, _P], _R_co], p))
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
@@ -216,7 +206,7 @@ class register_rewrite:
 
 
 # TODO: change _cls_rewrite_meths value type to MethodInfo?
-class GenericTypeRewriter(Generic[_T]):
+class GenericTypeRewriter:
     _namespaces: ClassVar[SetOnceDict[type, list[AnnotatedMethodInfo]]] = SetOnceDict()
     _namespaces_ro: ClassVar[MappingProxyType[type, list[AnnotatedMethodInfo]]] = MappingProxyType(
         _namespaces
